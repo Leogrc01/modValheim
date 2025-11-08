@@ -1,0 +1,71 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\PC\\source\\repos\\modValheim\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|c:\\users\\pc\\source\\repos\\modvalheim\\mods.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:mods.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|c:\\users\\pc\\source\\repos\\modvalheim\\loader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:loader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|c:\\users\\pc\\source\\repos\\modvalheim\\render.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:render.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Render.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\modValheim\\Render.cs",
+              "RelativeDocumentMoniker": "Render.cs",
+              "ToolTip": "C:\\Users\\PC\\source\\repos\\modValheim\\Render.cs",
+              "RelativeToolTip": "Render.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADEAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-08T14:46:26.925Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Mods.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\modValheim\\Mods.cs",
+              "RelativeDocumentMoniker": "Mods.cs",
+              "ToolTip": "C:\\Users\\PC\\source\\repos\\modValheim\\Mods.cs",
+              "RelativeToolTip": "Mods.cs",
+              "ViewState": "AgIAACsAAAAAAAAAAAAAwDkAAABiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-08T14:40:25.798Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Loader.cs",
+              "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\modValheim\\Loader.cs",
+              "RelativeDocumentMoniker": "Loader.cs",
+              "ToolTip": "C:\\Users\\PC\\source\\repos\\modValheim\\Loader.cs",
+              "RelativeToolTip": "Loader.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-08T14:38:37.391Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
