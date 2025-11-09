@@ -1,66 +1,42 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace modValheim
 {
     class Mods : MonoBehaviour
     {
+        private Camera mainCamera;
+        private List<BaseAI> aiList = new List<BaseAI>();
+
+        private void Start()
+        {
+            mainCamera = Camera.main;
+        }
+
         public void OnGUI()
         {
-            //Replace OnlinePlayer with the name of your Player class, and make sure to change the reference DLLs to the ones for your game!
-
-            foreach (AnimalAI animals in FindObjectsOfType(typeof(AnimalAI)) as AnimalAI[])
+            // On dessine seulement ici, pas de recherche coûteuse
+            foreach (BaseAI ai in aiList)
             {
-                //In-Game Position
-                Vector3 pivotPos = animals.transform.position; //Pivot point NOT at the feet, at the center
-                Vector3 animalsFootPos; animalsFootPos.x = pivotPos.x; animalsFootPos.z = pivotPos.z; animalsFootPos.y = pivotPos.y - 2f; //At the feet
-                Vector3 animalsHeadPos; animalsHeadPos.x = pivotPos.x; animalsHeadPos.z = pivotPos.z; animalsHeadPos.y = pivotPos.y + 2f; //At the head
-
-                //Screen Position
-                Vector3 w2s_footpos = Camera.main.WorldToScreenPoint(animalsFootPos);
-                Vector3 w2s_headpos = Camera.main.WorldToScreenPoint(animalsHeadPos);
-
-                if (w2s_footpos.z > 0f)
+                if (ai != null)
                 {
-                    DrawBoxESP(w2s_footpos, w2s_headpos, Color.green);
+                    DrawAIESP(ai);
                 }
             }
+        }
 
-            foreach (Player player in FindObjectsOfType(typeof(Player)) as Player[])
+        public void DrawAIESP(BaseAI ai)
+        {
+            Bounds bounds = ai.GetComponentInChildren<Renderer>().bounds;
+            Vector3 baseAIFootPos = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+            Vector3 baseAIHeadPos = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
+
+            Vector3 w2sFootPos = mainCamera.WorldToScreenPoint(baseAIFootPos);
+            Vector3 w2sHeadPos = mainCamera.WorldToScreenPoint(baseAIHeadPos);
+
+            if (w2sFootPos.z > 0f)
             {
-                //In-Game Position
-                Vector3 pivotPos = player.transform.position; //Pivot point NOT at the feet, at the center
-                Vector3 playerFootPos; playerFootPos.x = pivotPos.x; playerFootPos.z = pivotPos.z; playerFootPos.y = pivotPos.y - 2f; //At the feet
-                Vector3 playerHeadPos; playerHeadPos.x = pivotPos.x; playerHeadPos.z = pivotPos.z; playerHeadPos.y = pivotPos.y + 2f; //At the head
-
-                //Screen Position
-                Vector3 w2s_footpos = Camera.main.WorldToScreenPoint(playerFootPos);
-                Vector3 w2s_headpos = Camera.main.WorldToScreenPoint(playerHeadPos);
-
-                GUI.Label(new Rect(w2s_headpos.x, Screen.height - w2s_headpos.y, 100, 20), "Player");
-
-                if (w2s_footpos.z > 0f)
-                {
-                    DrawBoxESP(w2s_footpos, w2s_headpos, Color.green);
-                }
-            }
-
-            foreach (BaseAI baseai in FindObjectsOfType(typeof(BaseAI)) as BaseAI[])
-            {
-                //In-Game Position
-                Vector3 pivotPos = baseai.transform.position; //Pivot point NOT at the feet, at the center
-                Vector3 baseaiFootPos; baseaiFootPos.x = pivotPos.x; baseaiFootPos.z = pivotPos.z; baseaiFootPos.y = pivotPos.y - 2f; //At the feet
-                Vector3 baseaiHeadPos; baseaiHeadPos.x = pivotPos.x; baseaiHeadPos.z = pivotPos.z; baseaiHeadPos.y = pivotPos.y + 2f; //At the head
-
-                //Screen Position
-                Vector3 w2s_footpos = Camera.main.WorldToScreenPoint(baseaiFootPos);
-                Vector3 w2s_headpos = Camera.main.WorldToScreenPoint(baseaiHeadPos);
-
-                GUI.Label(new Rect(w2s_headpos.x, Screen.height - w2s_headpos.y, 100, 20), "Ennemy");
-
-                if (w2s_footpos.z > 0f)
-                {
-                    DrawBoxESP(w2s_footpos, w2s_headpos, Color.red);
-                }
+                DrawBoxESP(w2sFootPos, w2sHeadPos, Color.red);
             }
         }
 
@@ -82,6 +58,14 @@ namespace modValheim
             if (Input.GetKeyDown(KeyCode.Delete))
             {
                 Loader.Unload();
+            }
+
+            // On met à jour la liste des AI seulement 1 fois par frame
+            aiList.Clear();
+            BaseAI[] allAI = FindObjectsOfType(typeof(BaseAI)) as BaseAI[];
+            if (allAI != null)
+            {
+                aiList.AddRange(allAI);
             }
         }
     }
