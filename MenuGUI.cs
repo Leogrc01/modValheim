@@ -11,6 +11,7 @@ namespace modValheim
         // Options ESP
         public bool ShowAnimals { get; set; } = true;
         public bool ShowEnemies { get; set; } = true;
+        public bool ShowItems { get; set; } = true;
         public bool ShowSnaplines { get; set; } = true;
         public bool ShowBoxes { get; set; } = true;
 
@@ -96,6 +97,9 @@ namespace modValheim
             GUILayout.Space(5);
 
             ShowAnimals = GUILayout.Toggle(ShowAnimals, " Afficher les animaux", toggleStyle);
+            GUILayout.Space(5);
+
+            ShowItems = GUILayout.Toggle(ShowItems, " Afficher les items", toggleStyle);
             GUILayout.Space(5);
 
             GUILayout.Space(10);
