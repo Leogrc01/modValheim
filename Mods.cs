@@ -9,6 +9,7 @@ namespace modValheim
         private List<BaseAI> aiList = new List<BaseAI>();
         private List<AnimalAI> animalList = new List<AnimalAI>();
         private List<ItemDrop> itemList = new List<ItemDrop>();
+        private List<Player> playersList = new List<Player>();
         private MenuGUI menuGUI;
 
         private void Start()
@@ -28,7 +29,18 @@ namespace modValheim
                 {
                     if (ai != null)
                     {
-                        DrawEntityESP(ai, Color.red);
+                        DrawEntityESP(ai, Color.red, true, menuGUI.ShowDistances, menuGUI.MaxEnemyDistance);
+                    }
+                }
+            }
+
+            if (menuGUI.ShowPlayers)
+            {
+                foreach (Player players in playersList)
+                {
+                    if (players != null)
+                    {
+                        DrawEntityESP(players, Color.yellow, true, menuGUI.ShowDistances, menuGUI.MaxEnemyDistance);
                     }
                 }
             }
@@ -39,7 +51,7 @@ namespace modValheim
                 {
                     if (animalai != null)
                     {
-                        DrawEntityESP(animalai, Color.green);
+                        DrawEntityESP(animalai, Color.green, true, menuGUI.ShowDistances, menuGUI.MaxAnimalDistance);
                     }
                 }
             }
@@ -50,15 +62,19 @@ namespace modValheim
                 {
                     if (item != null)
                     {
-                        DrawEntityESP(item, Color.cyan, true); // Bleu cyan avec nom
+                        DrawEntityESP(item, Color.cyan, true, menuGUI.ShowDistances, menuGUI.MaxItemDistance); // Bleu cyan avec nom
                     }
                 }
             }
         }
 
         // Fonction universelle pour dessiner l'ESP de n'importe quelle entité
-        public void DrawEntityESP(Component entity, Color color, bool showName = false)
+        public void DrawEntityESP(Component entity, Color color, bool showName = false, bool showDistance = true, float maxDistance = 100f)
         {
+            // Vérifier la distance
+            float distance = Vector3.Distance(mainCamera.transform.position, entity.transform.position);
+            if (distance > maxDistance) return;
+
             Renderer renderer = entity.GetComponentInChildren<Renderer>();
             if (renderer == null) return;
 
@@ -72,7 +88,8 @@ namespace modValheim
             if (w2sFootPos.z > 0f)
             {
                 string name = showName ? GetEntityName(entity) : null;
-                DrawBoxESP(w2sFootPos, w2sHeadPos, color, name);
+                string distanceText = showDistance ? $" [{distance:F1}m]" : "";
+                DrawBoxESP(w2sFootPos, w2sHeadPos, color, name, distanceText);
             }
         }
 
@@ -88,7 +105,7 @@ namespace modValheim
             return entity.gameObject.name.Replace("(Clone)", "").Trim();
         }
 
-        public void DrawBoxESP(Vector3 footpos, Vector3 headpos, Color color, string name = null) //Rendering the ESP
+        public void DrawBoxESP(Vector3 footpos, Vector3 headpos, Color color, string name = null, string distanceText = null) //Rendering the ESP
         {
             float height = headpos.y - footpos.y;
             float widthOffset = 2f;
@@ -101,10 +118,11 @@ namespace modValheim
             }
 
             // Afficher le nom au-dessus de la boîte
-            if (!string.IsNullOrEmpty(name))
+            if (!string.IsNullOrEmpty(name) || !string.IsNullOrEmpty(distanceText))
             {
+                string displayText = name + distanceText;
                 Vector2 namePos = new Vector2(footpos.x, (float)Screen.height - footpos.y - height - 15);
-                DrawText(namePos, name, color);
+                DrawText(namePos, displayText, color);
             }
 
             //Snapline
@@ -148,16 +166,33 @@ namespace modValheim
             animalList.Clear();
             itemList.Clear();
             
-            BaseAI[] allAI = FindObjectsOfType(typeof(BaseAI)) as BaseAI[];
-            if (allAI != null)
+            // Récupérer tous les joueurs (y compris le joueur local et les autres joueurs)
+            playersList.Clear();
+            List<Player> allPlayers = Player.GetAllPlayers();
+            if (allPlayers != null)
             {
-                aiList.AddRange(allAI);
+                playersList.AddRange(allPlayers);
             }
             
+            // Récupérer d'abord les animaux
             AnimalAI[] animAI = FindObjectsOfType(typeof(AnimalAI)) as AnimalAI[];
             if (animAI != null)
             {
                 animalList.AddRange(animAI);
+            }
+            
+            // Ensuite récupérer les AI en excluant les animaux
+            BaseAI[] allAI = FindObjectsOfType(typeof(BaseAI)) as BaseAI[];
+            if (allAI != null)
+            {
+                foreach (BaseAI ai in allAI)
+                {
+                    // Ne pas ajouter si c'est un AnimalAI (pour éviter les doublons avec les ennemis)
+                    if (!(ai is AnimalAI))
+                    {
+                        aiList.Add(ai);
+                    }
+                }
             }
             
             ItemDrop[] items = FindObjectsOfType(typeof(ItemDrop)) as ItemDrop[];

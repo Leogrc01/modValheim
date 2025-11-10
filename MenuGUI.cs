@@ -6,14 +6,22 @@ namespace modValheim
     {
         // État du menu
         private bool showMenu = false;
-        private Rect menuRect = new Rect(20, 20, 250, 300);
+        private Rect menuRect = new Rect(20, 20, 300, 600);
 
         // Options ESP
         public bool ShowAnimals { get; set; } = true;
         public bool ShowEnemies { get; set; } = true;
+        public bool ShowPlayers { get; set; } = true;
         public bool ShowItems { get; set; } = true;
         public bool ShowSnaplines { get; set; } = true;
         public bool ShowBoxes { get; set; } = true;
+        public bool ShowDistances { get; set; } = true;
+
+        // Distances maximales (en mètres)
+        public float MaxEnemyDistance { get; set; } = 100f;
+        public float MaxPlayerDistance { get; set; } = 100f;
+        public float MaxAnimalDistance { get; set; } = 100f;
+        public float MaxItemDistance { get; set; } = 50f;
 
         // Style
         private GUIStyle boxStyle;
@@ -94,12 +102,43 @@ namespace modValheim
 
             // Options ESP
             ShowEnemies = GUILayout.Toggle(ShowEnemies, " Afficher les ennemis (AI)", toggleStyle);
+            if (ShowEnemies)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Distance: {MaxEnemyDistance:F0}m", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                MaxEnemyDistance = GUILayout.HorizontalSlider(MaxEnemyDistance, 10f, 500f);
+            }
+            GUILayout.Space(5);
+
+            ShowPlayers = GUILayout.Toggle(ShowPlayers, " Afficher les joueurs", toggleStyle);
+            if (ShowPlayers)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Distance: {MaxPlayerDistance:F0}m", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                MaxPlayerDistance = GUILayout.HorizontalSlider(MaxPlayerDistance, 10f, 500f);
+            }
             GUILayout.Space(5);
 
             ShowAnimals = GUILayout.Toggle(ShowAnimals, " Afficher les animaux", toggleStyle);
+            if (ShowAnimals)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Distance: {MaxAnimalDistance:F0}m", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                MaxAnimalDistance = GUILayout.HorizontalSlider(MaxAnimalDistance, 10f, 500f);
+            }
             GUILayout.Space(5);
 
             ShowItems = GUILayout.Toggle(ShowItems, " Afficher les items", toggleStyle);
+            if (ShowItems)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Distance: {MaxItemDistance:F0}m", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                MaxItemDistance = GUILayout.HorizontalSlider(MaxItemDistance, 10f, 200f);
+            }
             GUILayout.Space(5);
 
             GUILayout.Space(10);
@@ -110,6 +149,9 @@ namespace modValheim
             GUILayout.Space(5);
 
             ShowSnaplines = GUILayout.Toggle(ShowSnaplines, " Afficher les snaplines", toggleStyle);
+            GUILayout.Space(10);
+
+            ShowDistances = GUILayout.Toggle(ShowDistances, " Afficher les distances", toggleStyle);
             GUILayout.Space(10);
 
             // Informations

@@ -1,22 +1,18 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\PC\\source\\repos\\modValheim\\",
+  "WorkspaceRootPath": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|c:\\users\\pc\\source\\repos\\modvalheim\\menugui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:menugui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|C:\\Users\\PC\\source\\repos\\modValheim\\mods.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\mods.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:mods.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|C:\\Users\\PC\\source\\repos\\modValheim\\Render.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:Render.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|c:\\users\\leo__\\documents\\code\\c#\\modvalheim\\menugui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:menugui.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|C:\\Users\\PC\\source\\repos\\modValheim\\Loader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:Loader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\Render.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{0391B4BF-8DE8-4B43-A90F-8BCD04A5C227}|modValheim.csproj|solutionrelative:Render.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,13 +30,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "MenuGUI.cs",
-              "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\modValheim\\MenuGUI.cs",
+              "DocumentMoniker": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\MenuGUI.cs",
               "RelativeDocumentMoniker": "MenuGUI.cs",
-              "ToolTip": "C:\\Users\\PC\\source\\repos\\modValheim\\MenuGUI.cs",
+              "ToolTip": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\MenuGUI.cs",
               "RelativeToolTip": "MenuGUI.cs",
-              "ViewState": "AgIAADsAAAAAAAAAAAAswAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAuwI0AAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-09T17:20:49.764Z",
               "EditorCaption": ""
@@ -49,37 +45,27 @@
               "$type": "Document",
               "DocumentIndex": 2,
               "Title": "Render.cs",
-              "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\modValheim\\Render.cs",
+              "DocumentMoniker": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\Render.cs",
               "RelativeDocumentMoniker": "Render.cs",
-              "ToolTip": "C:\\Users\\PC\\source\\repos\\modValheim\\Render.cs",
+              "ToolTip": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\Render.cs",
               "RelativeToolTip": "Render.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-08T14:46:26.925Z"
+              "WhenOpened": "2025-11-08T14:46:26.925Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Mods.cs",
-              "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\modValheim\\Mods.cs",
+              "DocumentMoniker": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\Mods.cs",
               "RelativeDocumentMoniker": "Mods.cs",
-              "ToolTip": "C:\\Users\\PC\\source\\repos\\modValheim\\Mods.cs",
+              "ToolTip": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\Mods.cs",
               "RelativeToolTip": "Mods.cs",
-              "ViewState": "AgIAAAIAAAAAAAAAAAAcwA4AAAAlAAAAAAAAAA==",
+              "ViewState": "AgIAAJoAAAAAAAAAAAASwK4AAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-08T14:40:25.798Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Loader.cs",
-              "DocumentMoniker": "C:\\Users\\PC\\source\\repos\\modValheim\\Loader.cs",
-              "RelativeDocumentMoniker": "Loader.cs",
-              "ToolTip": "C:\\Users\\PC\\source\\repos\\modValheim\\Loader.cs",
-              "RelativeToolTip": "Loader.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAOAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-08T14:38:37.391Z"
+              "WhenOpened": "2025-11-08T14:40:25.798Z",
+              "EditorCaption": ""
             }
           ]
         }
