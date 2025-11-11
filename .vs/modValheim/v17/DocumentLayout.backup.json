@@ -36,9 +36,10 @@
               "RelativeDocumentMoniker": "MenuGUI.cs",
               "ToolTip": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\MenuGUI.cs",
               "RelativeToolTip": "MenuGUI.cs",
-              "ViewState": "AgIAAF0AAAAAAAAAAAAuwI0AAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAuwI0AAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-09T17:20:49.764Z"
+              "WhenOpened": "2025-11-09T17:20:49.764Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -50,7 +51,8 @@
               "RelativeToolTip": "Render.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-08T14:46:26.925Z"
+              "WhenOpened": "2025-11-08T14:46:26.925Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -60,7 +62,7 @@
               "RelativeDocumentMoniker": "Mods.cs",
               "ToolTip": "C:\\Users\\Leo__\\Documents\\Code\\C#\\modValheim\\Mods.cs",
               "RelativeToolTip": "Mods.cs",
-              "ViewState": "AgIAAAEAAAAA+DRbqh39vxMAAAAgAAAAAAAAAA==",
+              "ViewState": "AgIAAMEAAAAA8Gm2VDvqv9kAAABIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-11-08T14:40:25.798Z",
               "EditorCaption": ""

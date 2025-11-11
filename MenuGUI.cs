@@ -7,6 +7,8 @@ namespace modValheim
         // État du menu
         private bool showMenu = false;
         private Rect menuRect = new Rect(20, 20, 300, 600);
+        private int currentTab = 0; // 0 = ESP, 1 = Skills
+        private string[] tabNames = { "ESP", "Skills" };
 
         // Options ESP
         public bool ShowAnimals { get; set; } = true;
@@ -25,10 +27,18 @@ namespace modValheim
         public float MaxItemDistance { get; set; } = 50f;
         public float MaxBossStoneDistance { get; set; } = 300f;
 
+        // Options Skills
+        public bool UnlimitedStamina { get; set; } = false;
+        public bool NoSkillDrain { get; set; } = false;
+        public float SkillMultiplier { get; set; } = 1f;
+        public bool ResetSkillsRequested { get; set; } = false;
+
         // Style
         private GUIStyle boxStyle;
         private GUIStyle labelStyle;
         private GUIStyle toggleStyle;
+        private GUIStyle buttonStyle;
+        private GUIStyle selectedButtonStyle;
         private bool stylesInitialized = false;
 
         private void InitializeStyles()
@@ -56,6 +66,22 @@ namespace modValheim
                 fontSize = 12,
                 normal = { textColor = Color.white },
                 onNormal = { textColor = Color.green }
+            };
+
+            // Style pour les boutons d'onglets
+            buttonStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = Color.white, background = MakeTexture(2, 2, new Color(0.3f, 0.3f, 0.3f, 0.8f)) },
+                hover = { textColor = Color.white, background = MakeTexture(2, 2, new Color(0.4f, 0.4f, 0.4f, 0.8f)) }
+            };
+
+            // Style pour l'onglet sélectionné
+            selectedButtonStyle = new GUIStyle(buttonStyle)
+            {
+                normal = { textColor = Color.green, background = MakeTexture(2, 2, new Color(0.2f, 0.5f, 0.2f, 0.8f)) },
+                hover = { textColor = Color.green, background = MakeTexture(2, 2, new Color(0.2f, 0.5f, 0.2f, 0.8f)) }
             };
 
             stylesInitialized = true;
@@ -91,14 +117,48 @@ namespace modValheim
             InitializeStyles();
 
             // Dessiner le menu
-            menuRect = GUI.Window(0, menuRect, DrawMenu, "ESP Menu", boxStyle);
+            menuRect = GUI.Window(0, menuRect, DrawMenu, "Valheim Mod Menu", boxStyle);
         }
 
         private void DrawMenu(int windowID)
         {
             GUILayout.Space(10);
 
-            // Titre
+            // Onglets
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < tabNames.Length; i++)
+            {
+                if (GUILayout.Button(tabNames[i], currentTab == i ? selectedButtonStyle : buttonStyle))
+                {
+                    currentTab = i;
+                }
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+
+            // Afficher le contenu selon l'onglet sélectionné
+            switch (currentTab)
+            {
+                case 0:
+                    DrawESPTab();
+                    break;
+                case 1:
+                    DrawSkillsTab();
+                    break;
+            }
+
+            // Informations (toujours affichées)
+            GUILayout.Space(10);
+            GUILayout.Label("Touches:", labelStyle);
+            GUILayout.Label("  Insert - Ouvrir/Fermer le menu", GUI.skin.label);
+            GUILayout.Label("  Delete - Décharger le mod", GUI.skin.label);
+
+            // Rendre le menu déplaçable
+            GUI.DragWindow(new Rect(0, 0, 10000, 20));
+        }
+
+        private void DrawESPTab()
+        {
             GUILayout.Label("Options d'affichage", labelStyle);
             GUILayout.Space(10);
 
@@ -165,15 +225,52 @@ namespace modValheim
 
             ShowDistances = GUILayout.Toggle(ShowDistances, " Afficher les distances", toggleStyle);
             GUILayout.Space(10);
+        }
 
-            // Informations
+        private void DrawSkillsTab()
+        {
+            GUILayout.Label("Options de compétences", labelStyle);
             GUILayout.Space(10);
-            GUILayout.Label("Touches:", labelStyle);
-            GUILayout.Label("  Insert - Ouvrir/Fermer le menu", GUI.skin.label);
-            GUILayout.Label("  Delete - Décharger le mod", GUI.skin.label);
 
-            // Rendre le menu déplaçable
-            GUI.DragWindow(new Rect(0, 0, 10000, 20));
+            UnlimitedStamina = GUILayout.Toggle(UnlimitedStamina, " Stamina infinie", toggleStyle);
+            GUILayout.Space(5);
+
+            NoSkillDrain = GUILayout.Toggle(NoSkillDrain, " Pas de perte de skill à la mort", toggleStyle);
+            GUILayout.Space(5);
+
+            GUILayout.Space(10);
+            GUILayout.Label("Multiplicateur de progression", labelStyle);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"  x{SkillMultiplier:F1}", GUI.skin.label);
+            GUILayout.EndHorizontal();
+            SkillMultiplier = GUILayout.HorizontalSlider(SkillMultiplier, 1f, 10f);
+            GUILayout.Space(10);
+
+            if (GUILayout.Button("Réinitialiser tous les skills", buttonStyle))
+            {
+                ResetSkillsRequested = true;
+            }
+            
+            if (GUILayout.Button("Maximiser tous les skills (100)", buttonStyle))
+            {
+                MaximizeAllSkills();
+            }
+        }
+
+        private void MaximizeAllSkills()
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null) return;
+
+            Skills skills = localPlayer.GetSkills();
+            if (skills == null) return;
+
+            // Récupérer toutes les skills et les mettre au max
+            foreach (Skills.Skill skill in skills.GetSkillList())
+            {
+                skill.m_level = 100f;
+                skill.m_accumulator = 0f;
+            }
         }
     }
 }

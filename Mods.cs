@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace modValheim
@@ -198,6 +199,33 @@ namespace modValheim
                 Loader.Unload();
             }
 
+            // Gestion des skills
+            ApplySkillModifications();
+            
+            // Réinitialiser les skills si demandé
+            if (menuGUI.ResetSkillsRequested)
+            {
+                ResetAllSkills();
+                menuGUI.ResetSkillsRequested = false;
+            }
+
+            // Stamina infinie
+            if (menuGUI.UnlimitedStamina)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    // Utiliser la méthode publique pour ajouter de la stamina
+                    float maxStamina = localPlayer.GetMaxStamina();
+                    float currentStamina = localPlayer.GetStamina();
+                    
+                    if (currentStamina < maxStamina)
+                    {
+                        localPlayer.AddStamina(maxStamina - currentStamina);
+                    }
+                }
+            }
+
             // On met à jour la liste des AI seulement 1 fois par frame
             aiList.Clear();
             animalList.Clear();
@@ -251,6 +279,61 @@ namespace modValheim
                 {
                     bossStoneList.Add(obj);
                 }
+            }
+        }
+
+        private void ApplySkillModifications()
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null) return;
+
+            Skills skills = localPlayer.GetSkills();
+            if (skills == null) return;
+
+            // Multiplicateur de compétences - utiliser la réflexion pour modifier le champ privé
+            if (menuGUI.SkillMultiplier > 1f)
+            {
+                SetPrivateField(skills, "m_useSkillGainFactor", menuGUI.SkillMultiplier);
+            }
+            else
+            {
+                SetPrivateField(skills, "m_useSkillGainFactor", 1f);
+            }
+
+            // Empêcher la perte de skills à la mort - utiliser la réflexion
+            if (menuGUI.NoSkillDrain)
+            {
+                SetPrivateField(skills, "m_DeathLowerFactor", 0f);
+            }
+            else
+            {
+                SetPrivateField(skills, "m_DeathLowerFactor", 0.25f);
+            }
+        }
+
+        private void ResetAllSkills()
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null) return;
+
+            Skills skills = localPlayer.GetSkills();
+            if (skills == null) return;
+
+            // Réinitialiser toutes les compétences à 0
+            foreach (Skills.Skill skill in skills.GetSkillList())
+            {
+                skill.m_level = 0f;
+                skill.m_accumulator = 0f;
+            }
+        }
+
+        // Méthode utilitaire pour modifier des champs privés via réflexion
+        private void SetPrivateField(object obj, string fieldName, object value)
+        {
+            FieldInfo field = obj.GetType().GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+            if (field != null)
+            {
+                field.SetValue(obj, value);
             }
         }
     }
