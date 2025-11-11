@@ -13,6 +13,7 @@ namespace modValheim
         public bool ShowEnemies { get; set; } = true;
         public bool ShowPlayers { get; set; } = true;
         public bool ShowItems { get; set; } = true;
+        public bool ShowBossStones { get; set; } = true;
         public bool ShowSnaplines { get; set; } = true;
         public bool ShowBoxes { get; set; } = true;
         public bool ShowDistances { get; set; } = true;
@@ -22,6 +23,7 @@ namespace modValheim
         public float MaxPlayerDistance { get; set; } = 100f;
         public float MaxAnimalDistance { get; set; } = 100f;
         public float MaxItemDistance { get; set; } = 50f;
+        public float MaxBossStoneDistance { get; set; } = 300f;
 
         // Style
         private GUIStyle boxStyle;
@@ -138,6 +140,16 @@ namespace modValheim
                 GUILayout.Label($"  Distance: {MaxItemDistance:F0}m", GUI.skin.label);
                 GUILayout.EndHorizontal();
                 MaxItemDistance = GUILayout.HorizontalSlider(MaxItemDistance, 10f, 200f);
+            }
+            GUILayout.Space(5);
+
+            ShowBossStones = GUILayout.Toggle(ShowBossStones, " Afficher les Boss Stones", toggleStyle);
+            if (ShowBossStones)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Distance: {MaxBossStoneDistance:F0}m", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                MaxBossStoneDistance = GUILayout.HorizontalSlider(MaxBossStoneDistance, 10f, 1000f);
             }
             GUILayout.Space(5);
 

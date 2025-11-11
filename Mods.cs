@@ -10,6 +10,7 @@ namespace modValheim
         private List<AnimalAI> animalList = new List<AnimalAI>();
         private List<ItemDrop> itemList = new List<ItemDrop>();
         private List<Player> playersList = new List<Player>();
+        private List<GameObject> bossStoneList = new List<GameObject>();
         private MenuGUI menuGUI;
 
         private void Start()
@@ -65,6 +66,42 @@ namespace modValheim
                         DrawEntityESP(item, Color.cyan, true, menuGUI.ShowDistances, menuGUI.MaxItemDistance); // Bleu cyan avec nom
                     }
                 }
+            }
+            
+            if (menuGUI.ShowBossStones)
+            {
+                foreach (GameObject bossStone in bossStoneList)
+                {
+                    if (bossStone != null)
+                    {
+                        DrawBossStoneESP(bossStone, Color.magenta, menuGUI.ShowDistances, menuGUI.MaxBossStoneDistance);
+                    }
+                }
+            }
+        }
+
+        // Fonction pour dessiner l'ESP des BossStones
+        public void DrawBossStoneESP(GameObject bossStone, Color color, bool showDistance, float maxDistance)
+        {
+            // Vérifier la distance
+            float distance = Vector3.Distance(mainCamera.transform.position, bossStone.transform.position);
+            if (distance > maxDistance) return;
+
+            Renderer renderer = bossStone.GetComponentInChildren<Renderer>();
+            if (renderer == null) return;
+
+            Bounds bounds = renderer.bounds;
+            Vector3 footPos = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+            Vector3 headPos = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
+
+            Vector3 w2sFootPos = mainCamera.WorldToScreenPoint(footPos);
+            Vector3 w2sHeadPos = mainCamera.WorldToScreenPoint(headPos);
+
+            if (w2sFootPos.z > 0f)
+            {
+                string name = bossStone.name.Replace("(Clone)", "").Trim();
+                string distanceText = showDistance ? $" [{distance:F1}m]" : "";
+                DrawBoxESP(w2sFootPos, w2sHeadPos, color, name, distanceText);
             }
         }
 
@@ -165,6 +202,7 @@ namespace modValheim
             aiList.Clear();
             animalList.Clear();
             itemList.Clear();
+            bossStoneList.Clear();
             
             // Récupérer tous les joueurs (y compris le joueur local et les autres joueurs)
             playersList.Clear();
@@ -199,6 +237,20 @@ namespace modValheim
             if (items != null)
             {
                 itemList.AddRange(items);
+            }
+            
+            // Récupérer les BossStones (autels de boss) par leur nom
+            // Les autels de boss ont généralement "BossStone" ou "Altar" dans leur nom
+            GameObject[] allObjects = FindObjectsOfType<GameObject>();
+            foreach (GameObject obj in allObjects)
+            {
+                if (obj.name.Contains("BossStone") || 
+                    obj.name.Contains("altar") || 
+                    obj.name.Contains("Altar") ||
+                    obj.name.Contains("Offering"))
+                {
+                    bossStoneList.Add(obj);
+                }
             }
         }
     }
