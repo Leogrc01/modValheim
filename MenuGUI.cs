@@ -11,14 +11,14 @@ namespace modValheim
         private string[] tabNames = { "ESP", "Skills", "Cheats" };
 
         // Options ESP
-        public bool ShowAnimals { get; set; } = true;
-        public bool ShowEnemies { get; set; } = true;
-        public bool ShowPlayers { get; set; } = true;
-        public bool ShowItems { get; set; } = true;
-        public bool ShowBossStones { get; set; } = true;
-        public bool ShowSnaplines { get; set; } = true;
-        public bool ShowBoxes { get; set; } = true;
-        public bool ShowDistances { get; set; } = true;
+        public bool ShowAnimals { get; set; } = false;
+        public bool ShowEnemies { get; set; } = false;
+        public bool ShowPlayers { get; set; } = false;
+        public bool ShowItems { get; set; } = false;
+        public bool ShowBossStones { get; set; } = false;
+        public bool ShowSnaplines { get; set; } = false;
+        public bool ShowBoxes { get; set; } = false;
+        public bool ShowDistances { get; set; } = false;
 
         // Distances maximales (en mètres)
         public float MaxEnemyDistance { get; set; } = 100f;

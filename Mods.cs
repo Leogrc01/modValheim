@@ -26,6 +26,8 @@ namespace modValheim
         private Dictionary<string, float> originalSpeeds = new Dictionary<string, float>();
         private bool speedsStored = false;
         private float lastSpeedMultiplier = 1f;
+        private bool lastOneShotValue = false;
+        private bool lastNoWeightValue = false;
 
         private void Start()
         {
@@ -301,6 +303,16 @@ namespace modValheim
                         currentWeapon.m_shared.m_damages.m_spirit = 9999f;
                     }
                 }
+                lastOneShotValue = true;
+            }
+            else if (lastOneShotValue)
+            {
+                // Déséquiper et rééquiper l'arme pour réinitialiser les dégâts
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, "🔄 One Shot désactivé - Rééquipez votre arme!");
+                }
+                lastOneShotValue = false;
             }
 
             // Speed Hack - modifier les champs Character
@@ -479,6 +491,35 @@ namespace modValheim
                         }
                     }
                 }
+                lastNoWeightValue = true;
+            }
+            else if (lastNoWeightValue)
+            {
+                // Réinitialiser les valeurs de poids par défaut
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    Type playerType = typeof(Player);
+                    FieldInfo[] fields = playerType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    
+                    foreach (FieldInfo field in fields)
+                    {
+                        string fieldName = field.Name.ToLower();
+                        if (fieldName.Contains("maxcarryweight"))
+                        {
+                            if (field.FieldType == typeof(float))
+                            {
+                                field.SetValue(localPlayer, 300f); // Valeur par défaut de Valheim
+                            }
+                        }
+                    }
+                    
+                    if (MessageHud.instance != null)
+                    {
+                        MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, "🔄 Poids limité réactivé!");
+                    }
+                }
+                lastNoWeightValue = false;
             }
 
 
