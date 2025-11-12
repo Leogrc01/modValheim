@@ -7,8 +7,8 @@ namespace modValheim
         // État du menu
         private bool showMenu = false;
         private Rect menuRect = new Rect(20, 20, 300, 600);
-        private int currentTab = 0; // 0 = ESP, 1 = Skills
-        private string[] tabNames = { "ESP", "Skills" };
+        private int currentTab = 0; // 0 = ESP, 1 = Skills, 2 = Cheats
+        private string[] tabNames = { "ESP", "Skills", "Cheats" };
 
         // Options ESP
         public bool ShowAnimals { get; set; } = true;
@@ -29,9 +29,19 @@ namespace modValheim
 
         // Options Skills
         public bool UnlimitedStamina { get; set; } = false;
+        public bool InfiniteHealth { get; set; } = false;
         public bool NoSkillDrain { get; set; } = false;
         public float SkillMultiplier { get; set; } = 1f;
         public bool ResetSkillsRequested { get; set; } = false;
+
+        // Options Cheats
+        public bool NoWeightLimit { get; set; } = false;
+        public bool OneShot { get; set; } = false;
+        public bool SpeedHack { get; set; } = false;
+        public float SpeedMultiplier { get; set; } = 2f;
+        public bool FlyHack { get; set; } = false;
+        public bool DuplicateSlot8Requested { get; set; } = false;
+        public int DuplicateMultiplier { get; set; } = 2;
 
         // Style
         private GUIStyle boxStyle;
@@ -145,6 +155,9 @@ namespace modValheim
                 case 1:
                     DrawSkillsTab();
                     break;
+                case 2:
+                    DrawCheatsTab();
+                    break;
             }
 
             // Informations (toujours affichées)
@@ -209,7 +222,7 @@ namespace modValheim
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"  Distance: {MaxBossStoneDistance:F0}m", GUI.skin.label);
                 GUILayout.EndHorizontal();
-                MaxBossStoneDistance = GUILayout.HorizontalSlider(MaxBossStoneDistance, 10f, 1000f);
+                MaxBossStoneDistance = GUILayout.HorizontalSlider(MaxBossStoneDistance, 10f, 5000f);
             }
             GUILayout.Space(5);
 
@@ -235,6 +248,9 @@ namespace modValheim
             UnlimitedStamina = GUILayout.Toggle(UnlimitedStamina, " Stamina infinie", toggleStyle);
             GUILayout.Space(5);
 
+            InfiniteHealth = GUILayout.Toggle(InfiniteHealth, " Vie Infinie", toggleStyle);
+            GUILayout.Space(5);
+
             NoSkillDrain = GUILayout.Toggle(NoSkillDrain, " Pas de perte de skill à la mort", toggleStyle);
             GUILayout.Space(5);
 
@@ -255,6 +271,66 @@ namespace modValheim
             {
                 MaximizeAllSkills();
             }
+        }
+
+        private void DrawCheatsTab()
+        {
+            GUILayout.Label("Options de triche", labelStyle);
+            GUILayout.Space(10);
+
+            NoWeightLimit = GUILayout.Toggle(NoWeightLimit, " Poids infini (pas de surcharge)", toggleStyle);
+            GUILayout.Space(5);
+
+            OneShot = GUILayout.Toggle(OneShot, " One Shot (tue tout en un coup)", toggleStyle);
+            GUILayout.Space(5);
+            if (OneShot)
+            {
+                GUILayout.Label("  ⚡ Arbres, rochers, ennemis, tout!", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
+            SpeedHack = GUILayout.Toggle(SpeedHack, " Speed Hack", toggleStyle);
+            GUILayout.Space(5);
+            if (SpeedHack)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Vitesse: x{SpeedMultiplier:F1}", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                SpeedMultiplier = GUILayout.HorizontalSlider(SpeedMultiplier, 1f, 10f);
+                GUILayout.Space(5);
+                GUILayout.Label("🏃 Course, nage, tout est plus rapide!", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
+            FlyHack = GUILayout.Toggle(FlyHack, " Fly Hack (mode vol)", toggleStyle);
+            GUILayout.Space(5);
+            if (FlyHack)
+            {
+                GUILayout.Label("🪶 Espace = monter / Ctrl = descendre", GUI.skin.label);
+            }
+
+            GUILayout.Space(15);
+            GUILayout.Label("Duplication d'items", labelStyle);
+            GUILayout.Space(10);
+
+            GUILayout.Label("Slot 8 de l'inventaire (barre rapide)", GUI.skin.label);
+            GUILayout.Space(5);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Multiplicateur: x{DuplicateMultiplier}", GUI.skin.label);
+            GUILayout.EndHorizontal();
+            DuplicateMultiplier = (int)GUILayout.HorizontalSlider(DuplicateMultiplier, 2f, 100f);
+            GUILayout.Space(10);
+
+            if (GUILayout.Button($"Multiplier les items du slot 8 (x{DuplicateMultiplier})", buttonStyle))
+            {
+                DuplicateSlot8Requested = true;
+            }
+            
+            GUILayout.Space(5);
+            GUILayout.Label("⚠️ Placez l'item à dupliquer dans le 8ème slot", GUI.skin.label);
+            GUILayout.Label("   de votre barre rapide avant de cliquer", GUI.skin.label);
+            GUILayout.Space(10);
         }
 
         private void MaximizeAllSkills()
