@@ -592,6 +592,49 @@ namespace modValheim
                 }
             }
 
+            // Free Crafting - craft/amélioration sans ressources
+            if (menuGUI.FreeCrafting)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    // Activer le mode NoCostCheat (craft gratuit)
+                    SetPrivateField(localPlayer, "m_noPlacementCost", true);
+                    
+                    // Essayer d'activer aussi le flag de craft gratuit si disponible
+                    Type playerType = typeof(Player);
+                    FieldInfo[] fields = playerType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    
+                    foreach (FieldInfo field in fields)
+                    {
+                        string fieldName = field.Name.ToLower();
+                        if (fieldName.Contains("nocost") && field.FieldType == typeof(bool))
+                        {
+                            field.SetValue(localPlayer, true);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Désactiver le free crafting
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null && !menuGUI.InfiniteBuild) // Ne pas désactiver si InfiniteBuild est actif
+                {
+                    Type playerType = typeof(Player);
+                    FieldInfo[] fields = playerType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    
+                    foreach (FieldInfo field in fields)
+                    {
+                        string fieldName = field.Name.ToLower();
+                        if (fieldName.Contains("nocost") && field.FieldType == typeof(bool))
+                        {
+                            field.SetValue(localPlayer, false);
+                        }
+                    }
+                }
+            }
+
             // Fly Hack - mode vol libre
             if (menuGUI.FlyHack)
             {
@@ -1356,12 +1399,24 @@ namespace modValheim
                     localPlayer.SetGodMode(false);
                 }
 
-                // Réinitialiser le mode construction infinie
+                // Réinitialiser le mode construction infinie et craft gratuit
                 SetPrivateField(localPlayer, "m_noPlacementCost", false);
-
-                // Réinitialiser le poids
+                
+                // Récupérer les champs du joueur
                 Type playerType = typeof(Player);
                 FieldInfo[] fields = playerType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                
+                // Réinitialiser tous les flags nocost
+                foreach (FieldInfo field in fields)
+                {
+                    string fieldName = field.Name.ToLower();
+                    if (fieldName.Contains("nocost") && field.FieldType == typeof(bool))
+                    {
+                        field.SetValue(localPlayer, false);
+                    }
+                }
+
+                // Réinitialiser le poids
                 foreach (FieldInfo field in fields)
                 {
                     string fieldName = field.Name.ToLower();

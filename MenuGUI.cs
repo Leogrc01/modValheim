@@ -6,9 +6,15 @@ namespace modValheim
     {
         // État du menu
         private bool showMenu = false;
-        private Rect menuRect = new Rect(20, 20, 320, 700); // Agrandi pour le spawn d'items
+        private Rect menuRect = new Rect(20, 20, 360, 600); // Taille fixe optimale
         private int currentTab = 0; // 0 = ESP, 1 = Skills, 2 = Cheats, 3 = Legit Cheats
         private string[] tabNames = { "ESP", "Skills", "Cheats", "Legit" };
+        
+        // Scroll positions pour chaque onglet
+        private Vector2 espScrollPosition = Vector2.zero;
+        private Vector2 skillsScrollPosition = Vector2.zero;
+        private Vector2 cheatsScrollPosition = Vector2.zero;
+        private Vector2 legitScrollPosition = Vector2.zero;
 
         // Options ESP
         public bool ShowAnimals { get; set; } = false;
@@ -43,6 +49,7 @@ namespace modValheim
         public float SpeedMultiplier { get; set; } = 2f;
         public bool FlyHack { get; set; } = false;
         public bool InfiniteBuild { get; set; } = false;
+        public bool FreeCrafting { get; set; } = false;
         public bool RepairAllRequested { get; set; } = false;
         public bool SpawnItemRequested { get; set; } = false;
         public string SelectedItem { get; set; } = "Wood";
@@ -162,22 +169,48 @@ namespace modValheim
             GUILayout.EndHorizontal();
             GUILayout.Space(10);
 
+            // Zone scrollable pour le contenu de l'onglet (hauteur fixe)
+            Vector2 scrollPos = Vector2.zero;
+            switch (currentTab)
+            {
+                case 0:
+                    scrollPos = espScrollPosition;
+                    break;
+                case 1:
+                    scrollPos = skillsScrollPosition;
+                    break;
+                case 2:
+                    scrollPos = cheatsScrollPosition;
+                    break;
+                case 3:
+                    scrollPos = legitScrollPosition;
+                    break;
+            }
+
+            scrollPos = GUILayout.BeginScrollView(scrollPos, GUILayout.Height(450));
+
             // Afficher le contenu selon l'onglet sélectionné
             switch (currentTab)
             {
                 case 0:
                     DrawESPTab();
+                    espScrollPosition = scrollPos;
                     break;
                 case 1:
                     DrawSkillsTab();
+                    skillsScrollPosition = scrollPos;
                     break;
                 case 2:
                     DrawCheatsTab();
+                    cheatsScrollPosition = scrollPos;
                     break;
                 case 3:
                     DrawLegitCheatsTab();
+                    legitScrollPosition = scrollPos;
                     break;
             }
+
+            GUILayout.EndScrollView();
 
             // Informations (toujours affichées)
             GUILayout.Space(10);
@@ -345,6 +378,14 @@ namespace modValheim
             if (InfiniteBuild)
             {
                 GUILayout.Label("🏗️ Construire sans matériaux!", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
+            FreeCrafting = GUILayout.Toggle(FreeCrafting, " Craft gratuit", toggleStyle);
+            GUILayout.Space(5);
+            if (FreeCrafting)
+            {
+                GUILayout.Label("🛠️ Craft/Amélioration sans ressources!", GUI.skin.label);
             }
 
             GUILayout.Space(15);
