@@ -6,7 +6,7 @@ namespace modValheim
     {
         // État du menu
         private bool showMenu = false;
-        private Rect menuRect = new Rect(20, 20, 300, 600);
+        private Rect menuRect = new Rect(20, 20, 320, 700); // Agrandi pour le spawn d'items
         private int currentTab = 0; // 0 = ESP, 1 = Skills, 2 = Cheats
         private string[] tabNames = { "ESP", "Skills", "Cheats" };
 
@@ -16,6 +16,7 @@ namespace modValheim
         public bool ShowPlayers { get; set; } = false;
         public bool ShowItems { get; set; } = false;
         public bool ShowBossStones { get; set; } = false;
+        public bool ShowResources { get; set; } = false;
         public bool ShowSnaplines { get; set; } = false;
         public bool ShowBoxes { get; set; } = false;
         public bool ShowDistances { get; set; } = false;
@@ -26,6 +27,7 @@ namespace modValheim
         public float MaxAnimalDistance { get; set; } = 100f;
         public float MaxItemDistance { get; set; } = 50f;
         public float MaxBossStoneDistance { get; set; } = 300f;
+        public float MaxResourceDistance { get; set; } = 100f;
 
         // Options Skills
         public bool UnlimitedStamina { get; set; } = false;
@@ -40,8 +42,15 @@ namespace modValheim
         public bool SpeedHack { get; set; } = false;
         public float SpeedMultiplier { get; set; } = 2f;
         public bool FlyHack { get; set; } = false;
+        public bool InfiniteBuild { get; set; } = false;
+        public bool RepairAllRequested { get; set; } = false;
+        public bool SpawnItemRequested { get; set; } = false;
+        public string SelectedItem { get; set; } = "Wood";
+        public int SpawnQuantity { get; set; } = 50;
         public bool DuplicateSlot8Requested { get; set; } = false;
         public int DuplicateMultiplier { get; set; } = 2;
+        private Vector2 itemScrollPosition = Vector2.zero;
+        private string itemSearchFilter = "";
 
         // Style
         private GUIStyle boxStyle;
@@ -222,7 +231,18 @@ namespace modValheim
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"  Distance: {MaxBossStoneDistance:F0}m", GUI.skin.label);
                 GUILayout.EndHorizontal();
-                MaxBossStoneDistance = GUILayout.HorizontalSlider(MaxBossStoneDistance, 10f, 5000f);
+                MaxBossStoneDistance = GUILayout.HorizontalSlider(MaxBossStoneDistance, 10f, 1000f);
+            }
+            GUILayout.Space(5);
+
+            ShowResources = GUILayout.Toggle(ShowResources, " Afficher les ressources", toggleStyle);
+            if (ShowResources)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Distance: {MaxResourceDistance:F0}m", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                MaxResourceDistance = GUILayout.HorizontalSlider(MaxResourceDistance, 10f, 200f);
+                GUILayout.Label("  💎 Minerais, baies, champignons, etc.", GUI.skin.label);
             }
             GUILayout.Space(5);
 
@@ -307,6 +327,90 @@ namespace modValheim
             if (FlyHack)
             {
                 GUILayout.Label("🪶 Espace = monter / Ctrl = descendre", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
+            InfiniteBuild = GUILayout.Toggle(InfiniteBuild, " Construction infinie", toggleStyle);
+            GUILayout.Space(5);
+            if (InfiniteBuild)
+            {
+                GUILayout.Label("🏗️ Construire sans matériaux!", GUI.skin.label);
+            }
+
+            GUILayout.Space(15);
+            GUILayout.Label("Utilitaires", labelStyle);
+            GUILayout.Space(10);
+
+            if (GUILayout.Button("🔧 Réparer tout l'équipement", buttonStyle))
+            {
+                RepairAllRequested = true;
+            }
+            GUILayout.Space(5);
+            GUILayout.Label("  Toutes les armes/armures/outils", GUI.skin.label);
+
+            GUILayout.Space(15);
+            GUILayout.Label("Spawn d'items", labelStyle);
+            GUILayout.Space(10);
+
+            // Liste complète des items courants dans Valheim
+            string[] items = new string[] 
+            {
+                // Matériaux de base
+                "Wood", "Stone", "Flint", "FineWood", "CoreWood", "RoundLog",
+                // Minerais
+                "CopperOre", "TinOre", "IronOre", "SilverOre", "BlackMetalScrap", "Flametal", "FlametalOre",
+                // Métaux
+                "Copper", "Bronze", "Iron", "Silver", "BlackMetal",
+                // Cuir et peaux
+                "LeatherScraps", "DeerHide", "TrollHide", "WolfPelt", "WolfFang", "LoxPelt",
+                // Autre
+                "Coal", "Resin", "IronNails", "WitheredBone", "BoneFragments",
+                "Coins", "Amber", "Ruby", "AmberPearl",
+                // Nourriture
+                "RawMeat", "CookedMeat", "NeckTail", "Honey", "QueenBee",
+                "Blueberries", "Raspberry", "Cloudberry", "Carrot", "Turnip",
+                // Crafting avancé
+                "YagluthDrop", "DragonTear", "Eitr", "SurtlingCore",
+                "Obsidian", "Chitin", "Carapace",
+                // Graines
+                "CarrotSeeds", "TurnipSeeds", "OnionSeeds", "BeechSeeds"
+            };
+
+            // Barre de recherche
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Recherche:", GUILayout.Width(80));
+            itemSearchFilter = GUILayout.TextField(itemSearchFilter, GUILayout.Width(200));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+
+            // Zone scrollable pour les items
+            itemScrollPosition = GUILayout.BeginScrollView(itemScrollPosition, GUILayout.Height(150));
+            foreach (string item in items)
+            {
+                // Filtrer selon la recherche
+                if (!string.IsNullOrEmpty(itemSearchFilter) && 
+                    !item.ToLower().Contains(itemSearchFilter.ToLower()))
+                    continue;
+
+                if (GUILayout.Button(item, SelectedItem == item ? selectedButtonStyle : buttonStyle))
+                {
+                    SelectedItem = item;
+                }
+            }
+            GUILayout.EndScrollView();
+
+            GUILayout.Space(10);
+            GUILayout.Label($"Item sélectionné: {SelectedItem}", GUI.skin.label);
+            
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"Quantité: {SpawnQuantity}", GUI.skin.label);
+            GUILayout.EndHorizontal();
+            SpawnQuantity = (int)GUILayout.HorizontalSlider(SpawnQuantity, 1f, 999f);
+            
+            GUILayout.Space(10);
+            if (GUILayout.Button($"🎁 Spawn {SpawnQuantity}x {SelectedItem}", buttonStyle))
+            {
+                SpawnItemRequested = true;
             }
 
             GUILayout.Space(15);

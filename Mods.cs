@@ -9,11 +9,13 @@ namespace modValheim
     class Mods : MonoBehaviour
     {
         private Camera mainCamera;
+        private List<Player> playersList = new List<Player>();
         private List<BaseAI> aiList = new List<BaseAI>();
         private List<AnimalAI> animalList = new List<AnimalAI>();
         private List<ItemDrop> itemList = new List<ItemDrop>();
         private List<GameObject> bossStoneList = new List<GameObject>();
-        private List<Player> playersList = new List<Player>();
+        private List<Pickable> resourceList = new List<Pickable>();
+        private List<Destructible> oreList = new List<Destructible>();
         private MenuGUI menuGUI;
         
         // Optimisation: scanner moins fréquemment
@@ -28,6 +30,9 @@ namespace modValheim
         private float lastSpeedMultiplier = 1f;
         private bool lastOneShotValue = false;
         private bool lastNoWeightValue = false;
+        private HitData.DamageTypes originalDamages;
+        private bool originalDamagesStored = false;
+        private ItemDrop.ItemData lastModifiedWeapon = null;
 
         private void Start()
         {
@@ -101,6 +106,135 @@ namespace modValheim
                         DrawBossStoneESP(bossStone, Color.magenta, menuGUI.ShowDistances, menuGUI.MaxBossStoneDistance);
                     }
                 }
+            }
+            
+            if (menuGUI.ShowResources)
+            {
+                // Afficher les Pickables (baies, champignons, etc.)
+                foreach (Pickable resource in resourceList)
+                {
+                    if (resource != null)
+                    {
+                        DrawResourceESP(resource, Color.yellow, menuGUI.ShowDistances, menuGUI.MaxResourceDistance);
+                    }
+                }
+                
+                // Afficher les minerais
+                foreach (Destructible ore in oreList)
+                {
+                    if (ore != null)
+                    {
+                        DrawOreESP(ore, new Color(0.5f, 0.5f, 0.5f), menuGUI.ShowDistances, menuGUI.MaxResourceDistance);
+                    }
+                }
+            }
+        }
+
+        // Fonction pour dessiner l'ESP des ressources (Pickable)
+        public void DrawResourceESP(Pickable resource, Color color, bool showDistance, float maxDistance)
+        {
+            if (mainCamera == null) return;
+            
+            float distance = Vector3.Distance(mainCamera.transform.position, resource.transform.position);
+            if (distance > maxDistance) return;
+
+            Vector3 position = resource.transform.position;
+            Vector3 screenPos = mainCamera.WorldToScreenPoint(position);
+
+            if (screenPos.z > 0f)
+            {
+                Vector2 pos2D = new Vector2(screenPos.x, Screen.height - screenPos.y);
+                
+                // Obtenir le nom de la ressource
+                string resourceName = resource.GetHoverName();
+                if (string.IsNullOrEmpty(resourceName))
+                {
+                    resourceName = resource.name.Replace("(Clone)", "").Trim();
+                }
+                
+                string distanceText = showDistance ? $" [{distance:F1}m]" : "";
+                string displayText = resourceName + distanceText;
+                
+                DrawText(pos2D, displayText, color);
+            }
+        }
+
+        // Fonction pour dessiner l'ESP des minerais (Destructible)
+        public void DrawOreESP(Destructible ore, Color color, bool showDistance, float maxDistance)
+        {
+            if (mainCamera == null) return;
+            
+            float distance = Vector3.Distance(mainCamera.transform.position, ore.transform.position);
+            if (distance > maxDistance) return;
+
+            Vector3 position = ore.transform.position;
+            Vector3 screenPos = mainCamera.WorldToScreenPoint(position);
+
+            if (screenPos.z > 0f)
+            {
+                Vector2 pos2D = new Vector2(screenPos.x, Screen.height - screenPos.y);
+                
+                // Obtenir tous les noms possibles
+                string goName = ore.gameObject.name.Replace("(Clone)", "").Trim();
+                string lowerName = goName.ToLower();
+                string fullName = lowerName;
+                
+                // Ajouter le nom du parent
+                if (ore.transform.parent != null)
+                {
+                    fullName += " " + ore.transform.parent.name.ToLower();
+                }
+                
+                // Vérifier le HoverText
+                HoverText hoverText = ore.GetComponent<HoverText>();
+                if (hoverText != null && !string.IsNullOrEmpty(hoverText.m_text))
+                {
+                    fullName += " " + hoverText.m_text.ToLower();
+                }
+                
+                // Déterminer le type et la couleur
+                string oreName;
+                if (fullName.Contains("copper"))
+                {
+                    oreName = "CUIVRE";
+                    color = new Color(1f, 0.5f, 0f); // Orange vif
+                }
+                else if (fullName.Contains("tin"))
+                {
+                    oreName = "ÉTAIN";
+                    color = new Color(0.85f, 0.85f, 0.85f); // Gris clair visible
+                }
+                else if (fullName.Contains("iron") || fullName.Contains("scrap") || fullName.Contains("mudpile"))
+                {
+                    oreName = "FER";
+                    color = Color.white; // Blanc
+                }
+                else if (fullName.Contains("silver"))
+                {
+                    oreName = "ARGENT";
+                    color = Color.white; // Blanc pur
+                }
+                else if (fullName.Contains("obsidian"))
+                {
+                    oreName = "OBSIDIENNE";
+                    color = Color.magenta; // Magenta
+                }
+                else if (fullName.Contains("rock") || fullName.Contains("stone"))
+                {
+                    oreName = "ROCHE";
+                    color = new Color(0.6f, 0.6f, 0.6f); // Gris moyen
+                }
+                else
+                {
+                    // Afficher le nom brut pour les minerais inconnus
+                    oreName = goName.Replace("$piece_", "").Replace("deposit_", "").Replace("_", " ");
+                    color = Color.yellow; // Jaune pour ce qui n'est pas reconnu
+                }
+                
+                string distanceText = showDistance ? $" [{distance:F1}m]" : "";
+                string displayText = oreName + distanceText;
+                
+                DrawText(pos2D, displayText, color);
             }
         }
 
@@ -235,6 +369,20 @@ namespace modValheim
                 menuGUI.DuplicateSlot8Requested = false;
             }
 
+            // Réparer tout si demandé
+            if (menuGUI.RepairAllRequested)
+            {
+                RepairAllItems();
+                menuGUI.RepairAllRequested = false;
+            }
+
+            // Spawn item si demandé
+            if (menuGUI.SpawnItemRequested)
+            {
+                SpawnItem(menuGUI.SelectedItem, menuGUI.SpawnQuantity);
+                menuGUI.SpawnItemRequested = false;
+            }
+
             // Stamina infinie
             if (menuGUI.UnlimitedStamina)
             {
@@ -285,10 +433,17 @@ namespace modValheim
                 Player localPlayer = Player.m_localPlayer;
                 if (localPlayer != null)
                 {
-                    // Modifier les dégâts de l'arme équipée
                     ItemDrop.ItemData currentWeapon = localPlayer.GetCurrentWeapon();
                     if (currentWeapon != null && currentWeapon.m_shared != null)
                     {
+                        // Sauvegarder les dégâts d'origine la première fois
+                        if (!originalDamagesStored || lastModifiedWeapon != currentWeapon)
+                        {
+                            originalDamages = currentWeapon.m_shared.m_damages.Clone();
+                            originalDamagesStored = true;
+                            lastModifiedWeapon = currentWeapon;
+                        }
+
                         // Multiplier tous les types de dégâts par 9999
                         currentWeapon.m_shared.m_damages.m_damage = 9999f;
                         currentWeapon.m_shared.m_damages.m_blunt = 9999f;
@@ -307,10 +462,21 @@ namespace modValheim
             }
             else if (lastOneShotValue)
             {
-                // Déséquiper et rééquiper l'arme pour réinitialiser les dégâts
-                if (MessageHud.instance != null)
+                // Restaurer les dégâts d'origine
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null && originalDamagesStored && lastModifiedWeapon != null)
                 {
-                    MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, "🔄 One Shot désactivé - Rééquipez votre arme!");
+                    ItemDrop.ItemData currentWeapon = localPlayer.GetCurrentWeapon();
+                    if (currentWeapon == lastModifiedWeapon && currentWeapon.m_shared != null)
+                    {
+                        currentWeapon.m_shared.m_damages = originalDamages.Clone();
+                        if (MessageHud.instance != null)
+                        {
+                            MessageHud.instance.ShowMessage(MessageHud.MessageType.TopLeft, "✅ One Shot désactivé - Dégâts restaurés!");
+                        }
+                    }
+                    originalDamagesStored = false;
+                    lastModifiedWeapon = null;
                 }
                 lastOneShotValue = false;
             }
@@ -381,6 +547,26 @@ namespace modValheim
                 }
                 speedsStored = false;
                 lastSpeedMultiplier = 1f;
+            }
+
+            // Infinite Build - construction sans matériaux
+            if (menuGUI.InfiniteBuild)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    // Activer le mode NoPlacementCost (construction gratuite)
+                    SetPrivateField(localPlayer, "m_noPlacementCost", true);
+                }
+            }
+            else
+            {
+                // Désactiver quand l'option est désactivée
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    SetPrivateField(localPlayer, "m_noPlacementCost", false);
+                }
             }
 
             // Fly Hack - mode vol libre
@@ -532,6 +718,32 @@ namespace modValheim
         }
  
 
+        // Helper pour identifier si un objet est un minerai
+        private bool IsMineralResource(string name)
+        {
+            string lowerName = name.ToLower();
+            
+            // Exclure les arbres et plantes
+            if (lowerName.Contains("tree") || lowerName.Contains("sapling") || 
+                lowerName.Contains("beech") || lowerName.Contains("fir") ||
+                lowerName.Contains("pine") || lowerName.Contains("oak"))
+            {
+                return false;
+            }
+            
+            // Inclure les minerais
+            return lowerName.Contains("rock") || 
+                   lowerName.Contains("copper") ||
+                   lowerName.Contains("tin") ||
+                   lowerName.Contains("iron") ||
+                   lowerName.Contains("silver") ||
+                   lowerName.Contains("obsidian") ||
+                   lowerName.Contains("deposit") ||
+                   lowerName.Contains("ore") ||
+                   lowerName.Contains("mudpile") || // Fer des cryptes
+                   lowerName.Contains("scrap"); // Fer scrap
+        }
+
         private void ScanEntities()
         {
             // Nettoyer les listes
@@ -539,6 +751,8 @@ namespace modValheim
             animalList.Clear();
             itemList.Clear();
             bossStoneList.Clear();
+            resourceList.Clear();
+            oreList.Clear();
             playersList.Clear();
 
             // Récupérer les joueurs (méthode optimisée)
@@ -591,6 +805,48 @@ namespace modValheim
                             .Take(50); // Réduit à 50 pour moins de lag
                         
                         itemList.AddRange(nearbyItems);
+                    }
+                }
+            }
+
+            // Scanner les ressources (Pickable: baies, champignons, etc.)
+            if (menuGUI.ShowResources)
+            {
+                Pickable[] pickables = FindObjectsOfType(typeof(Pickable)) as Pickable[];
+                if (pickables != null && pickables.Length > 0)
+                {
+                    Camera cam = Camera.main;
+                    if (cam != null)
+                    {
+                        Vector3 camPos = cam.transform.position;
+                        float maxDist = menuGUI.MaxResourceDistance;
+                        
+                        var nearbyResources = pickables
+                            .Where(p => p != null && Vector3.Distance(camPos, p.transform.position) <= maxDist)
+                            .Take(50); // Limiter à 50
+                        
+                        resourceList.AddRange(nearbyResources);
+                    }
+                }
+                
+                // Scanner les minerais via Destructible (roches, arbres, etc.)
+                Destructible[] destructibles = FindObjectsOfType(typeof(Destructible)) as Destructible[];
+                if (destructibles != null && destructibles.Length > 0)
+                {
+                    Camera cam = Camera.main;
+                    if (cam != null)
+                    {
+                        Vector3 camPos = cam.transform.position;
+                        float maxDist = menuGUI.MaxResourceDistance;
+                        
+                        // Filtrer seulement les minerais (pas les arbres)
+                        var nearbyOres = destructibles
+                            .Where(d => d != null && 
+                                   Vector3.Distance(camPos, d.transform.position) <= maxDist &&
+                                   IsMineralResource(d.gameObject.name))
+                            .Take(30);
+                        
+                        oreList.AddRange(nearbyOres);
                     }
                 }
             }
@@ -659,6 +915,122 @@ namespace modValheim
             {
                 skill.m_level = 0f;
                 skill.m_accumulator = 0f;
+            }
+        }
+
+        private void SpawnItem(string itemName, int quantity)
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Joueur introuvable!");
+                }
+                return;
+            }
+
+            // Obtenir le prefab de l'item
+            GameObject prefab = ObjectDB.instance.GetItemPrefab(itemName);
+            if (prefab == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, $"❌ Item '{itemName}' introuvable!");
+                }
+                return;
+            }
+
+            // Obtenir le composant ItemDrop
+            ItemDrop itemDrop = prefab.GetComponent<ItemDrop>();
+            if (itemDrop == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, $"❌ '{itemName}' n'est pas un item valide!");
+                }
+                return;
+            }
+
+            // Créer et ajouter l'item à l'inventaire
+            Inventory inventory = localPlayer.GetInventory();
+            if (inventory != null)
+            {
+                // Créer une nouvelle instance de l'ItemData
+                ItemDrop.ItemData newItem = itemDrop.m_itemData.Clone();
+                newItem.m_stack = quantity;
+                newItem.m_durability = newItem.GetMaxDurability();
+
+                // Ajouter l'item à l'inventaire
+                bool success = inventory.AddItem(newItem);
+
+                if (success)
+                {
+                    if (MessageHud.instance != null)
+                    {
+                        string displayName = itemDrop.m_itemData.m_shared.m_name;
+                        MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, $"✅ {quantity}x {displayName} créé!");
+                    }
+                }
+                else
+                {
+                    if (MessageHud.instance != null)
+                    {
+                        MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Inventaire plein!");
+                    }
+                }
+            }
+        }
+
+        private void RepairAllItems()
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Joueur introuvable!");
+                }
+                return;
+            }
+
+            Inventory inventory = localPlayer.GetInventory();
+            if (inventory == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Inventaire introuvable!");
+                }
+                return;
+            }
+
+            int repairedCount = 0;
+            
+            // Réparer tous les items dans l'inventaire
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+            {
+                if (item != null && item.m_shared.m_maxDurability > 0)
+                {
+                    // Vérifier si l'item a besoin de réparation
+                    if (item.m_durability < item.GetMaxDurability())
+                    {
+                        item.m_durability = item.GetMaxDurability();
+                        repairedCount++;
+                    }
+                }
+            }
+
+            // Message de confirmation
+            if (MessageHud.instance != null)
+            {
+                if (repairedCount > 0)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, $"✅ {repairedCount} objet(s) réparé(s)!");
+                }
+                else
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "ℹ️ Rien à réparer!");
+                }
             }
         }
 
@@ -737,6 +1109,83 @@ namespace modValheim
                 return field.GetValue(obj) as T;
             }
             return null;
+        }
+
+        // Nettoyage quand le mod est déchargé
+        private void OnDestroy()
+        {
+            CleanupModEffects();
+        }
+
+        private void CleanupModEffects()
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer != null)
+            {
+                // Réinitialiser la gravité
+                Rigidbody body = GetPrivateField<Rigidbody>(localPlayer, "m_body");
+                if (body != null)
+                {
+                    body.useGravity = true;
+                }
+
+                // Réinitialiser le God Mode
+                if (localPlayer.InGodMode())
+                {
+                    localPlayer.SetGodMode(false);
+                }
+
+                // Réinitialiser le mode construction infinie
+                SetPrivateField(localPlayer, "m_noPlacementCost", false);
+
+                // Réinitialiser le poids
+                Type playerType = typeof(Player);
+                FieldInfo[] fields = playerType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                foreach (FieldInfo field in fields)
+                {
+                    string fieldName = field.Name.ToLower();
+                    if (fieldName.Contains("maxcarryweight"))
+                    {
+                        if (field.FieldType == typeof(float))
+                        {
+                            field.SetValue(localPlayer, 300f);
+                        }
+                    }
+                }
+
+                // Réinitialiser les vitesses
+                if (originalSpeeds.Count > 0)
+                {
+                    Type charType = typeof(Character);
+                    foreach (var kvp in originalSpeeds)
+                    {
+                        FieldInfo field = charType.GetField(kvp.Key, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                        if (field != null)
+                        {
+                            field.SetValue(localPlayer, kvp.Value);
+                        }
+                    }
+                }
+
+                // Réinitialiser les dégâts de l'arme
+                if (originalDamagesStored && lastModifiedWeapon != null)
+                {
+                    ItemDrop.ItemData currentWeapon = localPlayer.GetCurrentWeapon();
+                    if (currentWeapon == lastModifiedWeapon && currentWeapon.m_shared != null)
+                    {
+                        currentWeapon.m_shared.m_damages = originalDamages.Clone();
+                    }
+                }
+
+                // Message de confirmation
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "✅ Mod déchargé - Effets réinitialisés!");
+                }
+            }
+
+            // Note: Les dégâts des armes restent modifiés jusqu'à ce que vous les rééquipiez
+            // C'est une limitation car les ItemData sont persistés
         }
     }
 }
