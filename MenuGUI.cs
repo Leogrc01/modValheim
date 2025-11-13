@@ -7,8 +7,8 @@ namespace modValheim
         // État du menu
         private bool showMenu = false;
         private Rect menuRect = new Rect(20, 20, 320, 700); // Agrandi pour le spawn d'items
-        private int currentTab = 0; // 0 = ESP, 1 = Skills, 2 = Cheats
-        private string[] tabNames = { "ESP", "Skills", "Cheats" };
+        private int currentTab = 0; // 0 = ESP, 1 = Skills, 2 = Cheats, 3 = Legit Cheats
+        private string[] tabNames = { "ESP", "Skills", "Cheats", "Legit" };
 
         // Options ESP
         public bool ShowAnimals { get; set; } = false;
@@ -51,6 +51,13 @@ namespace modValheim
         public int DuplicateMultiplier { get; set; } = 2;
         private Vector2 itemScrollPosition = Vector2.zero;
         private string itemSearchFilter = "";
+        public bool RevealMapRequested { get; set; } = false;
+
+        // Options Legit Cheats
+        public bool NightVision { get; set; } = false;
+        public float NightVisionIntensity { get; set; } = 1.5f;
+        public bool EnhancedRegen { get; set; } = false;
+        public float RegenMultiplier { get; set; } = 1f;
 
         // Style
         private GUIStyle boxStyle;
@@ -166,6 +173,9 @@ namespace modValheim
                     break;
                 case 2:
                     DrawCheatsTab();
+                    break;
+                case 3:
+                    DrawLegitCheatsTab();
                     break;
             }
 
@@ -348,6 +358,14 @@ namespace modValheim
             GUILayout.Space(5);
             GUILayout.Label("  Toutes les armes/armures/outils", GUI.skin.label);
 
+            GUILayout.Space(10);
+            if (GUILayout.Button("🗺️ Révéler toute la carte", buttonStyle))
+            {
+                RevealMapRequested = true;
+            }
+            GUILayout.Space(5);
+            GUILayout.Label("  Découvre l'intégralité de la carte", GUI.skin.label);
+
             GUILayout.Space(15);
             GUILayout.Label("Spawn d'items", labelStyle);
             GUILayout.Space(10);
@@ -451,6 +469,51 @@ namespace modValheim
                 skill.m_level = 100f;
                 skill.m_accumulator = 0f;
             }
+        }
+
+        private void DrawLegitCheatsTab()
+        {
+            GUILayout.Label("🕵️ Cheats discrets", labelStyle);
+            GUILayout.Space(10);
+
+            GUILayout.Label("🌙 Vision et Confort", labelStyle);
+            GUILayout.Space(5);
+
+            NightVision = GUILayout.Toggle(NightVision, " Vision nocturne", toggleStyle);
+            if (NightVision)
+            {
+                GUILayout.Space(5);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Intensité: {NightVisionIntensity:F1}x", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                NightVisionIntensity = GUILayout.HorizontalSlider(NightVisionIntensity, 1.2f, 3.0f);
+                GUILayout.Space(5);
+                GUILayout.Label("  👁️ Vois mieux la nuit (subtil)", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
+
+            GUILayout.Label("❤️ Survie", labelStyle);
+            GUILayout.Space(5);
+
+            EnhancedRegen = GUILayout.Toggle(EnhancedRegen, " Régénération améliorée", toggleStyle);
+            if (EnhancedRegen)
+            {
+                GUILayout.Space(5);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Vitesse: {RegenMultiplier:F1}x", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                RegenMultiplier = GUILayout.HorizontalSlider(RegenMultiplier, 0.4f, 3.0f);
+                GUILayout.Space(5);
+                GUILayout.Label("  💚 HP/Stamina récupèrent plus vite", GUI.skin.label);
+            }
+
+            GUILayout.Space(15);
+            GUILayout.Label("ℹ️ Info", labelStyle);
+            GUILayout.Space(5);
+            GUILayout.Label("Ces cheats sont conçus pour être", GUI.skin.label);
+            GUILayout.Label("discrets et ne pas éveiller les soupçons.", GUI.skin.label);
+            GUILayout.Label("Utilise-les avec modération! 😏", GUI.skin.label);
         }
     }
 }

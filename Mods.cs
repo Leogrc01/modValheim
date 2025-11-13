@@ -33,6 +33,16 @@ namespace modValheim
         private HitData.DamageTypes originalDamages;
         private bool originalDamagesStored = false;
         private ItemDrop.ItemData lastModifiedWeapon = null;
+        
+        // Vision nocturne
+        private Light nightVisionLight = null;
+        private float originalAmbientIntensity = 0f;
+        private bool ambientIntensityStored = false;
+        
+        // Régénération améliorée
+        private float originalHealthRegen = 0f;
+        private float originalStaminaRegen = 0f;
+        private bool regenStored = false;
 
         private void Start()
         {
@@ -382,6 +392,19 @@ namespace modValheim
                 SpawnItem(menuGUI.SelectedItem, menuGUI.SpawnQuantity);
                 menuGUI.SpawnItemRequested = false;
             }
+
+            // Révéler la carte si demandé
+            if (menuGUI.RevealMapRequested)
+            {
+                RevealFullMap();
+                menuGUI.RevealMapRequested = false;
+            }
+
+            // Vision nocturne (Legit Cheat)
+            ApplyNightVision();
+
+            // Régénération améliorée (Legit Cheat)
+            ApplyEnhancedRegen();
 
             // Stamina infinie
             if (menuGUI.UnlimitedStamina)
@@ -1034,6 +1057,204 @@ namespace modValheim
             }
         }
 
+        private void RevealFullMap()
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Joueur introuvable!");
+                }
+                return;
+            }
+
+            // Obtenir la minimap
+            Minimap minimap = Minimap.instance;
+            if (minimap == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Minimap introuvable!");
+                }
+                return;
+            }
+
+            try
+            {
+                // Utiliser la réflexion pour accéder à m_explored
+                FieldInfo exploredField = typeof(Minimap).GetField("m_explored", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (exploredField == null)
+                {
+                    if (MessageHud.instance != null)
+                    {
+                        MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Champ m_explored introuvable!");
+                    }
+                    return;
+                }
+
+                bool[] explored = exploredField.GetValue(minimap) as bool[];
+                if (explored == null)
+                {
+                    if (MessageHud.instance != null)
+                    {
+                        MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Impossible de récupérer m_explored!");
+                    }
+                    return;
+                }
+
+                // Révéler toute la carte
+                for (int i = 0; i < explored.Length; i++)
+                {
+                    explored[i] = true;
+                }
+
+                // Forcer la mise à jour de la texture
+                MethodInfo updateMethod = typeof(Minimap).GetMethod("UpdateTextureGeneration", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (updateMethod != null)
+                {
+                    updateMethod.Invoke(minimap, null);
+                }
+
+                // Message de confirmation
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "✅ Carte entièrement révélée!");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, $"❌ Erreur: {ex.Message}");
+                }
+            }
+        }
+
+        private void ApplyEnhancedRegen()
+        {
+            if (menuGUI.EnhancedRegen)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer == null) return;
+
+                // Accéder aux champs de régénération via réflexion
+                Type playerType = typeof(Player);
+                
+                // Sauvegarder les valeurs originales
+                if (!regenStored)
+                {
+                    // Récupérer les valeurs de base
+                    FieldInfo healthRegenField = playerType.GetField("m_baseHP", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (healthRegenField != null)
+                    {
+                        originalHealthRegen = (float)healthRegenField.GetValue(localPlayer);
+                    }
+                    regenStored = true;
+                }
+
+                // Améliorer la régénération de santé en modifiant le timer
+                // Valheim régénère la santé tous les X secondes, on accélère ce process
+                float currentHealth = localPlayer.GetHealth();
+                float maxHealth = localPlayer.GetMaxHealth();
+                
+                if (currentHealth < maxHealth && currentHealth > 0)
+                {
+                    // Ajouter de la santé progressivement (subtil)
+                    float regenAmount = (maxHealth * 0.01f * menuGUI.RegenMultiplier) * Time.deltaTime;
+                    localPlayer.Heal(regenAmount, true); // true = afficher les effets visuels
+                }
+
+                // Améliorer la régénération de stamina
+                float currentStamina = localPlayer.GetStamina();
+                float maxStamina = localPlayer.GetMaxStamina();
+                
+                if (currentStamina < maxStamina)
+                {
+                    // Utiliser la réflexion pour accéder au taux de régénération
+                    FieldInfo staminaRegenField = playerType.GetField("m_staminaRegen", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (staminaRegenField != null)
+                    {
+                        // Obtenir la valeur actuelle et la multiplier
+                        float baseRegen = (float)staminaRegenField.GetValue(localPlayer);
+                        staminaRegenField.SetValue(localPlayer, baseRegen * menuGUI.RegenMultiplier);
+                    }
+                }
+            }
+            else if (regenStored)
+            {
+                // Réinitialiser les valeurs de régénération
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    Type playerType = typeof(Player);
+                    FieldInfo staminaRegenField = playerType.GetField("m_staminaRegen", BindingFlags.NonPublic | BindingFlags.Instance);
+                    if (staminaRegenField != null)
+                    {
+                        // Réinitialiser la stamina regen (valeur par défaut Valheim: 5f)
+                        staminaRegenField.SetValue(localPlayer, 5f);
+                    }
+                }
+                regenStored = false;
+            }
+        }
+
+        private void ApplyNightVision()
+        {
+            if (menuGUI.NightVision)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer == null) return;
+
+                // Sauvegarder l'intensité ambiante originale
+                if (!ambientIntensityStored)
+                {
+                    originalAmbientIntensity = RenderSettings.ambientIntensity;
+                    ambientIntensityStored = true;
+                }
+
+                // Augmenter l'éclairage ambiant (subtil)
+                RenderSettings.ambientIntensity = originalAmbientIntensity * menuGUI.NightVisionIntensity;
+
+                // Ajouter une lumière subtile autour du joueur si elle n'existe pas
+                if (nightVisionLight == null)
+                {
+                    GameObject lightObj = new GameObject("NightVisionLight");
+                    nightVisionLight = lightObj.AddComponent<Light>();
+                    nightVisionLight.type = LightType.Point;
+                    nightVisionLight.range = 15f + (menuGUI.NightVisionIntensity * 5f); // Portée adaptive
+                    nightVisionLight.intensity = 0.3f + (menuGUI.NightVisionIntensity * 0.2f); // Intensité subtile
+                    nightVisionLight.color = new Color(0.7f, 0.8f, 1f); // Bleuâtre légèrement
+                    nightVisionLight.shadows = LightShadows.None; // Pas d'ombres pour les perfs
+                }
+
+                // Suivre le joueur
+                if (nightVisionLight != null)
+                {
+                    nightVisionLight.transform.position = localPlayer.transform.position + Vector3.up * 1.5f;
+                    // Ajuster dynamiquement selon le slider
+                    nightVisionLight.range = 15f + (menuGUI.NightVisionIntensity * 5f);
+                    nightVisionLight.intensity = 0.3f + (menuGUI.NightVisionIntensity * 0.2f);
+                }
+            }
+            else
+            {
+                // Désactiver la vision nocturne
+                if (ambientIntensityStored)
+                {
+                    RenderSettings.ambientIntensity = originalAmbientIntensity;
+                    ambientIntensityStored = false;
+                }
+
+                // Détruire la lumière
+                if (nightVisionLight != null)
+                {
+                    Destroy(nightVisionLight.gameObject);
+                    nightVisionLight = null;
+                }
+            }
+        }
+
         private void DuplicateSlot8Item()
         {
             Player localPlayer = Player.m_localPlayer;
@@ -1182,6 +1403,30 @@ namespace modValheim
                 {
                     MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "✅ Mod déchargé - Effets réinitialisés!");
                 }
+            }
+
+            // Réinitialiser la vision nocturne
+            if (ambientIntensityStored)
+            {
+                RenderSettings.ambientIntensity = originalAmbientIntensity;
+                ambientIntensityStored = false;
+            }
+            if (nightVisionLight != null)
+            {
+                Destroy(nightVisionLight.gameObject);
+                nightVisionLight = null;
+            }
+
+            // Réinitialiser la régénération améliorée
+            if (regenStored && localPlayer != null)
+            {
+                Type playerType = typeof(Player);
+                FieldInfo staminaRegenField = playerType.GetField("m_staminaRegen", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (staminaRegenField != null)
+                {
+                    staminaRegenField.SetValue(localPlayer, 5f);
+                }
+                regenStored = false;
             }
 
             // Note: Les dégâts des armes restent modifiés jusqu'à ce que vous les rééquipiez
