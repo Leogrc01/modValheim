@@ -400,11 +400,119 @@ namespace modValheim
                 menuGUI.RevealMapRequested = false;
             }
 
+            // Quick Stack si demandé
+            if (menuGUI.QuickStackRequested)
+            {
+                QuickStackToNearbyContainers();
+                menuGUI.QuickStackRequested = false;
+            }
+
             // Vision nocturne (Legit Cheat)
             ApplyNightVision();
 
             // Régénération améliorée (Legit Cheat)
             ApplyEnhancedRegen();
+
+            // Pas de restrictions sur les portails
+            if (menuGUI.NoPortalRestrictions)
+            {
+                AllowAllItemsThroughPortals();
+            }
+
+            // Pas de dégâts de chute
+            if (menuGUI.NoFallDamage)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    // Annuler les dégâts de chute en mettant le flag à false
+                    Character character = localPlayer as Character;
+                    if (character != null)
+                    {
+                        SetPrivateField(character, "m_tolerateWater", true);
+                        // Réinitialiser le timer de chute
+                        SetPrivateField(character, "m_fallDamage", 0f);
+                    }
+                }
+            }
+
+            // Portée d'interaction augmentée (Legit Cheat)
+            if (menuGUI.ExtendedReach)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    // Augmenter la portée d'interaction
+                    Type playerType = typeof(Player);
+                    FieldInfo[] fields = playerType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    
+                    foreach (FieldInfo field in fields)
+                    {
+                        string fieldName = field.Name.ToLower();
+                        // Augmenter les distances d'interaction
+                        if ((fieldName.Contains("maxinteractdistance") || 
+                             fieldName.Contains("maxplacementdistance") ||
+                             fieldName.Contains("interactrange")) && 
+                            field.FieldType == typeof(float))
+                        {
+                            float originalValue = (float)field.GetValue(localPlayer);
+                            if (originalValue > 0 && originalValue < 100)
+                            {
+                                field.SetValue(localPlayer, originalValue * menuGUI.ReachMultiplier);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Pouvoirs de boss infinis
+            if (menuGUI.InfiniteGuardianPower)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    // Réinitialiser le cooldown du pouvoir de boss via réflexion
+                    Type playerType = typeof(Player);
+                    FieldInfo[] fields = playerType.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    
+                    foreach (FieldInfo field in fields)
+                    {
+                        string fieldName = field.Name.ToLower();
+                        // Chercher tous les champs liés au cooldown du pouvoir
+                        if (fieldName.Contains("guardianpower") && fieldName.Contains("cooldown"))
+                        {
+                            if (field.FieldType == typeof(float))
+                            {
+                                field.SetValue(localPlayer, 0f);
+                            }
+                        }
+                    }
+                    
+                    // Obtenir tous les StatusEffects actifs et réinitialiser ceux des Guardian Powers
+                    SEMan seMan = localPlayer.GetSEMan();
+                    if (seMan != null)
+                    {
+                        List<StatusEffect> allEffects = seMan.GetStatusEffects();
+                        if (allEffects != null)
+                        {
+                            foreach (StatusEffect se in allEffects)
+                            {
+                                if (se != null && se.name != null)
+                                {
+                                    string seName = se.name.ToLower();
+                                    // Vérifier si c'est un pouvoir de boss
+                                    if (seName.Contains("gp_") || seName.Contains("guardianpower"))
+                                    {
+                                        // Réinitialiser le timer du pouvoir
+                                        SetPrivateField(se, "m_time", 0f);
+                                        SetPrivateField(se, "m_ttl", 999999f); // Durée quasi infinie
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             // Stamina infinie
             if (menuGUI.UnlimitedStamina)
@@ -1174,6 +1282,43 @@ namespace modValheim
             }
         }
 
+        private void AllowAllItemsThroughPortals()
+        {
+            // Modifier tous les items dans l'inventaire pour qu'ils soient téléportables
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null) return;
+
+            Inventory inventory = localPlayer.GetInventory();
+            if (inventory == null) return;
+
+            // Parcourir tous les items
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+            {
+                if (item != null && item.m_shared != null)
+                {
+                    // Forcer l'item à être téléportable
+                    item.m_shared.m_teleportable = true;
+                }
+            }
+
+            // Modifier aussi tous les prefabs d'items dans ObjectDB pour les rendre téléportables de base
+            if (ObjectDB.instance != null)
+            {
+                foreach (GameObject itemPrefab in ObjectDB.instance.m_items)
+                {
+                    if (itemPrefab != null)
+                    {
+                        ItemDrop itemDrop = itemPrefab.GetComponent<ItemDrop>();
+                        if (itemDrop != null && itemDrop.m_itemData != null && itemDrop.m_itemData.m_shared != null)
+                        {
+                            // Rendre tous les items téléportables
+                            itemDrop.m_itemData.m_shared.m_teleportable = true;
+                        }
+                    }
+                }
+            }
+        }
+
         private void ApplyEnhancedRegen()
         {
             if (menuGUI.EnhancedRegen)
@@ -1294,6 +1439,116 @@ namespace modValheim
                 {
                     Destroy(nightVisionLight.gameObject);
                     nightVisionLight = null;
+                }
+            }
+        }
+
+        private void QuickStackToNearbyContainers()
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Joueur introuvable!");
+                }
+                return;
+            }
+
+            Inventory playerInventory = localPlayer.GetInventory();
+            if (playerInventory == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Inventaire introuvable!");
+                }
+                return;
+            }
+
+            // Trouver tous les conteneurs à portée
+            Container[] allContainers = FindObjectsOfType<Container>();
+            List<Container> nearbyContainers = new List<Container>();
+            
+            foreach (Container container in allContainers)
+            {
+                if (container == null || container.GetInventory() == null) continue;
+                
+                float distance = Vector3.Distance(localPlayer.transform.position, container.transform.position);
+                if (distance <= menuGUI.QuickStackRange)
+                {
+                    nearbyContainers.Add(container);
+                }
+            }
+
+            if (nearbyContainers.Count == 0)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Aucun coffre à portée!");
+                }
+                return;
+            }
+
+            int totalItemsMoved = 0;
+
+            // Pour chaque item dans l'inventaire du joueur
+            List<ItemDrop.ItemData> playerItems = new List<ItemDrop.ItemData>(playerInventory.GetAllItems());
+            
+            foreach (ItemDrop.ItemData playerItem in playerItems)
+            {
+                if (playerItem == null) continue;
+
+                // Chercher dans chaque coffre si cet item y existe déjà
+                foreach (Container container in nearbyContainers)
+                {
+                    Inventory containerInv = container.GetInventory();
+                    if (containerInv == null) continue;
+
+                    // Vérifier si le coffre contient déjà cet item
+                    bool containerHasItem = false;
+                    foreach (ItemDrop.ItemData containerItem in containerInv.GetAllItems())
+                    {
+                        if (containerItem != null && 
+                            containerItem.m_shared.m_name == playerItem.m_shared.m_name)
+                        {
+                            containerHasItem = true;
+                            break;
+                        }
+                    }
+
+                    // Si le coffre contient cet item, essayer de l'y transférer
+                    if (containerHasItem)
+                    {
+                        // Cloner l'item pour le transférer
+                        ItemDrop.ItemData itemToMove = playerItem.Clone();
+                        itemToMove.m_stack = playerItem.m_stack;
+
+                        // Essayer d'ajouter au coffre
+                        bool added = containerInv.AddItem(itemToMove);
+                        
+                        if (added)
+                        {
+                            // Retirer de l'inventaire du joueur
+                            playerInventory.RemoveItem(playerItem);
+                            totalItemsMoved += itemToMove.m_stack;
+                            break; // Passer à l'item suivant
+                        }
+                    }
+                }
+            }
+
+            // Message de confirmation
+            if (MessageHud.instance != null)
+            {
+                if (totalItemsMoved > 0)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, 
+                        $"✅ {totalItemsMoved} item(s) rangé(s) dans {nearbyContainers.Count} coffre(s)!");
+                }
+                else
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, 
+                        "ℹ️ Aucun item à ranger (coffres ne contiennent pas ces items)");
                 }
             }
         }

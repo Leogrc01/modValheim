@@ -41,6 +41,8 @@ namespace modValheim
         public bool NoSkillDrain { get; set; } = false;
         public float SkillMultiplier { get; set; } = 1f;
         public bool ResetSkillsRequested { get; set; } = false;
+        public bool InfiniteGuardianPower { get; set; } = false;
+        public bool NoFallDamage { get; set; } = false;
 
         // Options Cheats
         public bool NoWeightLimit { get; set; } = false;
@@ -54,17 +56,23 @@ namespace modValheim
         public bool SpawnItemRequested { get; set; } = false;
         public string SelectedItem { get; set; } = "Wood";
         public int SpawnQuantity { get; set; } = 50;
+        public string CustomItemName { get; set; } = "";
         public bool DuplicateSlot8Requested { get; set; } = false;
         public int DuplicateMultiplier { get; set; } = 2;
         private Vector2 itemScrollPosition = Vector2.zero;
         private string itemSearchFilter = "";
         public bool RevealMapRequested { get; set; } = false;
+        public bool QuickStackRequested { get; set; } = false;
+        public float QuickStackRange { get; set; } = 10f;
+        public bool NoPortalRestrictions { get; set; } = false;
 
         // Options Legit Cheats
         public bool NightVision { get; set; } = false;
         public float NightVisionIntensity { get; set; } = 1.5f;
         public bool EnhancedRegen { get; set; } = false;
         public float RegenMultiplier { get; set; } = 1f;
+        public bool ExtendedReach { get; set; } = false;
+        public float ReachMultiplier { get; set; } = 2f;
 
         // Style
         private GUIStyle boxStyle;
@@ -317,6 +325,20 @@ namespace modValheim
             NoSkillDrain = GUILayout.Toggle(NoSkillDrain, " Pas de perte de skill à la mort", toggleStyle);
             GUILayout.Space(5);
 
+            InfiniteGuardianPower = GUILayout.Toggle(InfiniteGuardianPower, " Pouvoirs de boss infinis", toggleStyle);
+            GUILayout.Space(5);
+            if (InfiniteGuardianPower)
+            {
+                GUILayout.Label("  ⚡ Pas de cooldown sur les pouvoirs!", GUI.skin.label);
+            }
+
+            NoFallDamage = GUILayout.Toggle(NoFallDamage, " Pas de dégâts de chute", toggleStyle);
+            GUILayout.Space(5);
+            if (NoFallDamage)
+            {
+                GUILayout.Label("  🪂 Saute d'où tu veux!", GUI.skin.label);
+            }
+
             GUILayout.Space(10);
             GUILayout.Label("Multiplicateur de progression", labelStyle);
             GUILayout.BeginHorizontal();
@@ -388,6 +410,14 @@ namespace modValheim
                 GUILayout.Label("🛠️ Craft/Amélioration sans ressources!", GUI.skin.label);
             }
 
+            GUILayout.Space(10);
+            NoPortalRestrictions = GUILayout.Toggle(NoPortalRestrictions, " Portails sans restriction", toggleStyle);
+            GUILayout.Space(5);
+            if (NoPortalRestrictions)
+            {
+                GUILayout.Label("🌌 Transporte les métaux dans les portails!", GUI.skin.label);
+            }
+
             GUILayout.Space(15);
             GUILayout.Label("Utilitaires", labelStyle);
             GUILayout.Space(10);
@@ -407,9 +437,52 @@ namespace modValheim
             GUILayout.Space(5);
             GUILayout.Label("  Découvre l'intégralité de la carte", GUI.skin.label);
 
+            GUILayout.Space(10);
+            if (GUILayout.Button("📦 Quick Stack vers coffres proches", buttonStyle))
+            {
+                QuickStackRequested = true;
+            }
+            GUILayout.Space(5);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"  Portée: {QuickStackRange:F0}m", GUI.skin.label);
+            GUILayout.EndHorizontal();
+            QuickStackRange = GUILayout.HorizontalSlider(QuickStackRange, 5f, 30f);
+            GUILayout.Space(5);
+            GUILayout.Label("  Range les items dans les coffres proches", GUI.skin.label);
+
             GUILayout.Space(15);
             GUILayout.Label("Spawn d'items", labelStyle);
             GUILayout.Space(10);
+
+            // Champ personnalisé pour taper n'importe quel nom d'item
+            GUILayout.Label("✏️ Spawn personnalisé (tout item):", labelStyle);
+            GUILayout.Space(5);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Nom item:", GUILayout.Width(80));
+            CustomItemName = GUILayout.TextField(CustomItemName, GUILayout.Width(200));
+            GUILayout.EndHorizontal();
+            GUILayout.Space(5);
+            
+            if (!string.IsNullOrEmpty(CustomItemName))
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"Quantité: {SpawnQuantity}", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                SpawnQuantity = (int)GUILayout.HorizontalSlider(SpawnQuantity, 1f, 999f);
+                
+                GUILayout.Space(5);
+                if (GUILayout.Button($"🎯 Spawn {SpawnQuantity}x {CustomItemName}", buttonStyle))
+                {
+                    SelectedItem = CustomItemName;
+                    SpawnItemRequested = true;
+                }
+                GUILayout.Space(5);
+                GUILayout.Label("💡 Ex: SwordIron, HelmetBronze, Tankard", GUI.skin.label);
+            }
+
+            GUILayout.Space(15);
+            GUILayout.Label("📋 Ou sélectionne dans la liste:", labelStyle);
+            GUILayout.Space(5);
 
             // Liste complète des items courants dans Valheim
             string[] items = new string[] 
@@ -544,9 +617,26 @@ namespace modValheim
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"  Vitesse: {RegenMultiplier:F1}x", GUI.skin.label);
                 GUILayout.EndHorizontal();
-                RegenMultiplier = GUILayout.HorizontalSlider(RegenMultiplier, 0.4f, 3.0f);
+                RegenMultiplier = GUILayout.HorizontalSlider(RegenMultiplier, 1.2f, 3.0f);
                 GUILayout.Space(5);
                 GUILayout.Label("  💚 HP/Stamina récupèrent plus vite", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
+
+            GUILayout.Label("🔧 Utilitaire", labelStyle);
+            GUILayout.Space(5);
+
+            ExtendedReach = GUILayout.Toggle(ExtendedReach, " Portée d'interaction augmentée", toggleStyle);
+            if (ExtendedReach)
+            {
+                GUILayout.Space(5);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Portée: {ReachMultiplier:F1}x", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                ReachMultiplier = GUILayout.HorizontalSlider(ReachMultiplier, 1.5f, 5.0f);
+                GUILayout.Space(5);
+                GUILayout.Label("  👉 Construis/interagis de plus loin", GUI.skin.label);
             }
 
             GUILayout.Space(15);
