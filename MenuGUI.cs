@@ -65,6 +65,8 @@ namespace modValheim
         public bool QuickStackRequested { get; set; } = false;
         public float QuickStackRange { get; set; } = 10f;
         public bool NoPortalRestrictions { get; set; } = false;
+        public bool RepairStructuresRequested { get; set; } = false;
+        public float RepairStructuresRange { get; set; } = 20f;
 
         // Options Legit Cheats
         public bool NightVision { get; set; } = false;
@@ -73,6 +75,9 @@ namespace modValheim
         public float RegenMultiplier { get; set; } = 1f;
         public bool ExtendedReach { get; set; } = false;
         public float ReachMultiplier { get; set; } = 2f;
+        public bool CustomCameraZoom { get; set; } = false;
+        public float MaxZoomDistance { get; set; } = 10f;
+        public float MinZoomDistance { get; set; } = 1f;
 
         // Style
         private GUIStyle boxStyle;
@@ -430,6 +435,19 @@ namespace modValheim
             GUILayout.Label("  Toutes les armes/armures/outils", GUI.skin.label);
 
             GUILayout.Space(10);
+            if (GUILayout.Button("🏗️ Réparer toutes les structures", buttonStyle))
+            {
+                RepairStructuresRequested = true;
+            }
+            GUILayout.Space(5);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label($"  Portée: {RepairStructuresRange:F0}m", GUI.skin.label);
+            GUILayout.EndHorizontal();
+            RepairStructuresRange = GUILayout.HorizontalSlider(RepairStructuresRange, 5f, 50f);
+            GUILayout.Space(5);
+            GUILayout.Label("  Murs, sols, toits, portes, etc.", GUI.skin.label);
+
+            GUILayout.Space(10);
             if (GUILayout.Button("🗺️ Révéler toute la carte", buttonStyle))
             {
                 RevealMapRequested = true;
@@ -637,6 +655,29 @@ namespace modValheim
                 ReachMultiplier = GUILayout.HorizontalSlider(ReachMultiplier, 1.5f, 5.0f);
                 GUILayout.Space(5);
                 GUILayout.Label("  👉 Construis/interagis de plus loin", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
+
+            CustomCameraZoom = GUILayout.Toggle(CustomCameraZoom, " Zoom caméra personnalisé", toggleStyle);
+            if (CustomCameraZoom)
+            {
+                GUILayout.Space(5);
+                GUILayout.Label("  Zoom max (molette arrière):", GUI.skin.label);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"    {MaxZoomDistance:F1}m", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                MaxZoomDistance = GUILayout.HorizontalSlider(MaxZoomDistance, 6f, 50f);
+                
+                GUILayout.Space(5);
+                GUILayout.Label("  Zoom min (molette avant):", GUI.skin.label);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"    {MinZoomDistance:F1}m", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                MinZoomDistance = GUILayout.HorizontalSlider(MinZoomDistance, 0.5f, 4f);
+                
+                GUILayout.Space(5);
+                GUILayout.Label("  📷 Dézoome plus loin, zoome plus près!", GUI.skin.label);
             }
 
             GUILayout.Space(15);

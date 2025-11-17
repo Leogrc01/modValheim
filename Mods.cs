@@ -407,6 +407,13 @@ namespace modValheim
                 menuGUI.QuickStackRequested = false;
             }
 
+            // Réparer les structures si demandé
+            if (menuGUI.RepairStructuresRequested)
+            {
+                RepairAllStructures();
+                menuGUI.RepairStructuresRequested = false;
+            }
+
             // Vision nocturne (Legit Cheat)
             ApplyNightVision();
 
@@ -461,6 +468,31 @@ namespace modValheim
                                 field.SetValue(localPlayer, originalValue * menuGUI.ReachMultiplier);
                             }
                         }
+                    }
+                }
+            }
+
+            // Zoom caméra personnalisé (Legit Cheat)
+            if (menuGUI.CustomCameraZoom)
+            {
+                // Modifier les limites de zoom de la caméra
+                GameCamera gameCamera = GameCamera.instance;
+                if (gameCamera != null)
+                {
+                    Type cameraType = typeof(GameCamera);
+                    
+                    // Modifier m_maxDistance (zoom max - molette arrière)
+                    FieldInfo maxDistField = cameraType.GetField("m_maxDistance", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    if (maxDistField != null)
+                    {
+                        maxDistField.SetValue(gameCamera, menuGUI.MaxZoomDistance);
+                    }
+                    
+                    // Modifier m_minDistance (zoom min - molette avant)
+                    FieldInfo minDistField = cameraType.GetField("m_minDistance", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    if (minDistField != null)
+                    {
+                        minDistField.SetValue(gameCamera, menuGUI.MinZoomDistance);
                     }
                 }
             }
@@ -1439,6 +1471,96 @@ namespace modValheim
                 {
                     Destroy(nightVisionLight.gameObject);
                     nightVisionLight = null;
+                }
+            }
+        }
+
+        private void RepairAllStructures()
+        {
+            Player localPlayer = Player.m_localPlayer;
+            if (localPlayer == null)
+            {
+                if (MessageHud.instance != null)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "❌ Joueur introuvable!");
+                }
+                return;
+            }
+
+            // Trouver toutes les pièces de construction (WearNTear) à portée
+            WearNTear[] allPieces = FindObjectsOfType<WearNTear>();
+            int repairedCount = 0;
+            int totalPieces = 0;
+            
+            foreach (WearNTear piece in allPieces)
+            {
+                if (piece == null) continue;
+                
+                // Vérifier la distance
+                float distance = Vector3.Distance(localPlayer.transform.position, piece.transform.position);
+                if (distance > menuGUI.RepairStructuresRange) continue;
+                
+                totalPieces++;
+                
+                // Essayer d'utiliser la méthode Repair() si disponible
+                try
+                {
+                    MethodInfo repairMethod = typeof(WearNTear).GetMethod("Repair", BindingFlags.Public | BindingFlags.Instance);
+                    if (repairMethod != null)
+                    {
+                        bool repaired = (bool)repairMethod.Invoke(piece, null);
+                        if (repaired)
+                        {
+                            repairedCount++;
+                        }
+                    }
+                    else
+                    {
+                        // Méthode alternative: forcer la santé au max
+                        Type wearType = typeof(WearNTear);
+                        FieldInfo healthField = wearType.GetField("m_health", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                        
+                        if (healthField != null)
+                        {
+                            // Obtenir m_healthPercentage pour vérifier si endommagé
+                            MethodInfo getHealthMethod = wearType.GetMethod("GetHealthPercentage", BindingFlags.Public | BindingFlags.Instance);
+                            if (getHealthMethod != null)
+                            {
+                                float healthPercent = (float)getHealthMethod.Invoke(piece, null);
+                                
+                                if (healthPercent < 1f) // Si endommagé
+                                {
+                                    healthField.SetValue(piece, piece.m_health);
+                                    repairedCount++;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    // Ignorer les erreurs et continuer
+                    continue;
+                }
+            }
+
+            // Message de confirmation
+            if (MessageHud.instance != null)
+            {
+                if (repairedCount > 0)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, 
+                        $"✅ {repairedCount}/{totalPieces} structure(s) réparée(s)!");
+                }
+                else if (totalPieces > 0)
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, 
+                        $"ℹ️ {totalPieces} structure(s) trouvée(s) mais déjà en bon état!");
+                }
+                else
+                {
+                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, 
+                        $"❌ Aucune structure dans un rayon de {menuGUI.RepairStructuresRange:F0}m!");
                 }
             }
         }
