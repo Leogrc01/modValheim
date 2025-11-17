@@ -78,6 +78,8 @@ namespace modValheim
         public bool CustomCameraZoom { get; set; } = false;
         public float MaxZoomDistance { get; set; } = 10f;
         public float MinZoomDistance { get; set; } = 1f;
+        public bool CustomBrightness { get; set; } = false;
+        public float BrightnessValue { get; set; } = 1f;
 
         // Style
         private GUIStyle boxStyle;
@@ -678,6 +680,20 @@ namespace modValheim
                 
                 GUILayout.Space(5);
                 GUILayout.Label("  📷 Dézoome plus loin, zoome plus près!", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
+
+            CustomBrightness = GUILayout.Toggle(CustomBrightness, " Luminosité personnalisée", toggleStyle);
+            if (CustomBrightness)
+            {
+                GUILayout.Space(5);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"  Luminosité: {BrightnessValue:F1}x", GUI.skin.label);
+                GUILayout.EndHorizontal();
+                BrightnessValue = GUILayout.HorizontalSlider(BrightnessValue, 0.5f, 3.0f);
+                GUILayout.Space(5);
+                GUILayout.Label("  💡 Ajuste la luminosité globale", GUI.skin.label);
             }
 
             GUILayout.Space(15);

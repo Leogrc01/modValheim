@@ -43,6 +43,11 @@ namespace modValheim
         private float originalHealthRegen = 0f;
         private float originalStaminaRegen = 0f;
         private bool regenStored = false;
+        
+        // Brightness
+        private float originalBrightness = 1f;
+        private bool brightnessStored = false;
+        private Light brightnessLight = null;
 
         private void Start()
         {
@@ -494,6 +499,68 @@ namespace modValheim
                     {
                         minDistField.SetValue(gameCamera, menuGUI.MinZoomDistance);
                     }
+                }
+            }
+
+            // Luminosité personnalisée (Legit Cheat)
+            if (menuGUI.CustomBrightness)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    // Sauvegarder l'intensité ambiante d'origine
+                    if (!brightnessStored)
+                    {
+                        originalBrightness = RenderSettings.ambientIntensity;
+                        brightnessStored = true;
+                    }
+                    
+                    // Augmenter l'éclairage ambiant
+                    RenderSettings.ambientIntensity = originalBrightness * menuGUI.BrightnessValue;
+                    
+                    // Créer une lumière directionnelle pour simuler plus de luminosité
+                    if (brightnessLight == null && menuGUI.BrightnessValue > 1.0f)
+                    {
+                        GameObject lightObj = new GameObject("BrightnessLight");
+                        brightnessLight = lightObj.AddComponent<Light>();
+                        brightnessLight.type = LightType.Directional;
+                        brightnessLight.intensity = (menuGUI.BrightnessValue - 1.0f) * 0.5f; // Intensité basée sur le slider
+                        brightnessLight.color = new Color(1f, 1f, 0.95f); // Blanc légèrement chaud
+                        brightnessLight.shadows = LightShadows.None; // Pas d'ombres pour les perfs
+                        // Orienter la lumière vers le bas (comme le soleil)
+                        brightnessLight.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+                    }
+                    
+                    // Ajuster l'intensité de la lumière selon le slider
+                    if (brightnessLight != null)
+                    {
+                        if (menuGUI.BrightnessValue > 1.0f)
+                        {
+                            brightnessLight.intensity = (menuGUI.BrightnessValue - 1.0f) * 0.5f;
+                        }
+                        else
+                        {
+                            // Si on diminue la luminosité, détruire la lumière supplémentaire
+                            Destroy(brightnessLight.gameObject);
+                            brightnessLight = null;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Désactiver la luminosité personnalisée
+                if (brightnessStored)
+                {
+                    RenderSettings.ambientIntensity = originalBrightness;
+                    brightnessStored = false;
+                }
+                
+                // Détruire la lumière
+                if (brightnessLight != null)
+                {
+                    Destroy(brightnessLight.gameObject);
+                    brightnessLight = null;
                 }
             }
 
@@ -1859,6 +1926,20 @@ namespace modValheim
                     staminaRegenField.SetValue(localPlayer, 5f);
                 }
                 regenStored = false;
+            }
+
+            // Réinitialiser la luminosité
+            if (brightnessStored)
+            {
+                RenderSettings.ambientIntensity = originalBrightness;
+                brightnessStored = false;
+            }
+            
+            // Détruire la lumière de brightness
+            if (brightnessLight != null)
+            {
+                Destroy(brightnessLight.gameObject);
+                brightnessLight = null;
             }
 
             // Note: Les dégâts des armes restent modifiés jusqu'à ce que vous les rééquipiez
