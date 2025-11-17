@@ -48,6 +48,15 @@ namespace modValheim
         private float originalBrightness = 1f;
         private bool brightnessStored = false;
         private Light brightnessLight = null;
+        
+        // Sauvegarde d'inventaire pour no item loss
+        private List<ItemDrop.ItemData> savedInventory = new List<ItemDrop.ItemData>();
+        private float lastInventorySaveTime = 0f;
+        private const float INVENTORY_SAVE_INTERVAL = 2.0f; // Sauvegarder toutes les 2 secondes
+        private bool inventoryRestored = false;
+        private float lastRestoreTime = 0f;
+        private bool waitingToRestore = false;
+        private float restoreWaitStartTime = 0f;
 
         private void Start()
         {
@@ -561,6 +570,101 @@ namespace modValheim
                 {
                     Destroy(brightnessLight.gameObject);
                     brightnessLight = null;
+                }
+            }
+
+            // Pas de perte d'items à la mort (Legit Cheat)
+            if (menuGUI.NoItemLossOnDeath)
+            {
+                Player localPlayer = Player.m_localPlayer;
+                if (localPlayer != null)
+                {
+                    Inventory inventory = localPlayer.GetInventory();
+                    
+                    if (inventory != null)
+                    {
+                        int itemCount = inventory.GetAllItems().Count;
+                        
+                        // Sauvegarder l'inventaire toutes les 2 secondes (seulement si non vide)
+                        if (itemCount > 0 && Time.time - lastInventorySaveTime > INVENTORY_SAVE_INTERVAL)
+                        {
+                            savedInventory.Clear();
+                            foreach (ItemDrop.ItemData item in inventory.GetAllItems())
+                            {
+                                if (item != null)
+                                {
+                                    savedInventory.Add(item.Clone());
+                                }
+                            }
+                            lastInventorySaveTime = Time.time;
+                            inventoryRestored = false; // Réinitialiser le flag
+                        }
+                        
+                        // Détecter si on doit commencer à attendre pour restaurer
+                        if (itemCount == 0 && 
+                            savedInventory.Count > 0 && 
+                            !inventoryRestored && 
+                            !waitingToRestore &&
+                            Time.time - lastRestoreTime > 10f)
+                        {
+                            // Commencer à attendre
+                            waitingToRestore = true;
+                            restoreWaitStartTime = Time.time;
+                        }
+                        
+                        // Si on attend et que 5 secondes se sont écoulées, restaurer
+                        if (waitingToRestore && Time.time - restoreWaitStartTime > 5f)
+                        {
+                            // Vérifier que le joueur est bien vivant et spawned
+                            if (localPlayer.GetHealth() > 0 && !localPlayer.IsDead())
+                            {
+                                // Restaurer maintenant
+                                foreach (ItemDrop.ItemData savedItem in savedInventory)
+                                {
+                                    if (savedItem != null)
+                                    {
+                                        inventory.AddItem(savedItem.Clone());
+                                    }
+                                }
+                                
+                                inventoryRestored = true;
+                                waitingToRestore = false;
+                                lastRestoreTime = Time.time;
+                                
+                                if (MessageHud.instance != null)
+                                {
+                                    MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, 
+                                        $"✅ {savedInventory.Count} items restaurés!");
+                                }
+                                
+                                // Nettoyer les tombstones proches (en arrière-plan)
+                                try
+                                {
+                                    TombStone[] tombstones = FindObjectsOfType<TombStone>();
+                                    foreach (TombStone tomb in tombstones)
+                                    {
+                                        if (tomb != null)
+                                        {
+                                            float distance = Vector3.Distance(localPlayer.transform.position, tomb.transform.position);
+                                            if (distance < 100f)
+                                            {
+                                                Destroy(tomb.gameObject);
+                                            }
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // Ignorer les erreurs de nettoyage des tombstones
+                                }
+                            }
+                            else
+                            {
+                                // Pas encore prêt, réinitialiser l'attente
+                                waitingToRestore = false;
+                            }
+                        }
+                    }
                 }
             }
 

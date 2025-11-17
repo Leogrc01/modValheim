@@ -80,6 +80,7 @@ namespace modValheim
         public float MinZoomDistance { get; set; } = 1f;
         public bool CustomBrightness { get; set; } = false;
         public float BrightnessValue { get; set; } = 1f;
+        public bool NoItemLossOnDeath { get; set; } = false;
 
         // Style
         private GUIStyle boxStyle;
@@ -629,6 +630,15 @@ namespace modValheim
 
             GUILayout.Label("❤️ Survie", labelStyle);
             GUILayout.Space(5);
+
+            NoItemLossOnDeath = GUILayout.Toggle(NoItemLossOnDeath, " Pas de perte d'items à la mort", toggleStyle);
+            if (NoItemLossOnDeath)
+            {
+                GUILayout.Space(5);
+                GUILayout.Label("  💀 Garde tous tes items en mourant!", GUI.skin.label);
+            }
+
+            GUILayout.Space(10);
 
             EnhancedRegen = GUILayout.Toggle(EnhancedRegen, " Régénération améliorée", toggleStyle);
             if (EnhancedRegen)
